@@ -157,31 +157,6 @@ Notes:
 
 ---
 
-## Project status
-
-**Working today:** authentication, subscription management, dashboard totals, categories and search, free-tier limit, data export (PDF and JSON), account deletion, offline cache.
-
-**Not finished yet**
-- In-app purchases and receipt validation (there is no endpoint that upgrades an account to premium yet)
-- Real email delivery (password-reset emails are currently logged to the API console)
-- Push notification delivery (the reminder scheduler runs, but notifications are logged to the console)
-- Pause and resume for subscriptions
-- Household sharing screens in the app (the API endpoints exist)
-- Production hosting: managed PostgreSQL, an HTTPS API URL, fresh JWT secrets, and store builds (EAS and TestFlight / Play Console)
-
----
-
-## Testing the app on iOS without a Mac
-
-1. Run the API and expose it over HTTPS, for example `cloudflared tunnel --url http://localhost:3000`
-2. Put that URL in `frontend/.env` as `EXPO_PUBLIC_API_URL`
-3. Run `npx expo start --tunnel -c` and share the QR code
-4. Testers install **Expo Go** from the App Store and scan it
-
-For longer testing, host the API and distribute builds through **TestFlight** (requires an Apple Developer account).
-
----
-
 ## License
 
 Private project. All rights reserved. Update this section if you choose a license.
