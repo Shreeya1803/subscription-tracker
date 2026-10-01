@@ -1,0 +1,1 @@
+UPDATE users SET premium_status = 'monthly' WHERE email = 'regA@example.com';

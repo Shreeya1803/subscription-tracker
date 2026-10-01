@@ -1,0 +1,208 @@
+// Prisma schema - Subscription Tracker (Kolhsys TDD Section 8)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// -- Enums (TDD Section 8) --
+
+enum PremiumStatus {
+  free
+  monthly
+  annual
+  lifetime
+}
+
+enum BillingCycle {
+  weekly
+  monthly
+  quarterly
+  yearly
+  custom
+}
+
+enum Category {
+  entertainment
+  utilities
+  work
+  health
+  other
+}
+
+enum SubscriptionStatus {
+  active
+  paused
+  canceled
+}
+
+enum HouseholdRole {
+  owner
+  member
+}
+
+// -- users (TDD 8.2) --
+
+model User {
+  id              String        @id @default(uuid()) @db.Uuid
+  email           String        @unique
+  passwordHash    String        @map("password_hash")
+  displayName     String        @map("display_name")
+  defaultCurrency String        @map("default_currency")
+  premiumStatus   PremiumStatus @default(free) @map("premium_status")
+  resetToken       String?   @map("reset_token")
+  resetTokenExpiry DateTime? @map("reset_token_expiry")
+    // TODO: not in TDD Section 8 -- required to actually deliver push
+  // notifications (FR-4). No endpoint for this exists in Section 9 either;
+  // added as a prerequisite, same as reset-password was added alongside
+  // forgot-password.
+  pushToken String? @map("push_token")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  subscriptions   Subscription[]
+  ownedHouseholds Household[]    @relation("HouseholdOwner")
+  memberships     Membership[]
+  savedEvents     SavedEvent[]
+  paymentEvents   PaymentEvent[]
+
+  @@map("users")
+}
+
+// -- subscriptions (TDD 8.3) --
+
+model Subscription {
+  id          String     @id @default(uuid()) @db.Uuid
+  userId      String     @map("user_id") @db.Uuid
+  household   Household? @relation(fields: [householdId], references: [id])
+  householdId String?    @map("household_id") @db.Uuid
+
+  name   String
+  amount Decimal @db.Decimal(10, 2)
+
+  // TODO (flagged, not yet decided): TDD's currency field is per-subscription,
+  // but dashboard totals (Section 10.2 compute_totals) sum raw amounts with no
+  // FX conversion. Needs a client decision before dashboard math is trustworthy
+  // for users with subscriptions in more than one currency.
+  currency String
+
+  billingCycle BillingCycle @map("billing_cycle")
+
+  // TODO: TDD does not specify bounds. Must be validated >0 at the application
+  // layer when billingCycle == custom. Prisma schema can't express conditional
+  // field requirements. Section 10.1's own pseudocode silently miscalculates
+  // (defaults to a monthly multiplier) if this is null/0, per earlier flag.
+  customCycleDays Int? @map("custom_cycle_days")
+
+  nextRenewal DateTime @map("next_renewal") @db.Date
+  category    Category
+
+  reminderEnabled Boolean @default(true) @map("reminder_enabled")
+
+  // TODO: TDD does not bound this against the billing cycle length - e.g. a
+  // 30-day reminder on a weekly subscription is nonsensical. Application-layer
+  // validation needed; not enforceable in schema.
+  reminderDaysBefore Int @map("reminder_days_before")
+
+  // TODO: nothing in the TDD defines a UI/endpoint action that ever sets this
+  // in a manual-entry-only app (FR-9 is effectively dead without a "mark as
+  // used" interaction, flagged earlier). Field kept per TDD spec as-is.
+  lastUsedDate DateTime? @map("last_used_date") @db.Date
+  // TODO: not in TDD Section 8 -- Section 10.5's reminder logic has no
+  // mechanism to prevent re-sending the same reminder on every cron run
+  // between the reminder date and the actual renewal. Tracks whether this
+  // cycle's reminder has already fired.
+  lastReminderSentAt DateTime? @map("last_reminder_sent_at")
+  
+  status SubscriptionStatus @default(active)
+  notes  String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user        User         @relation(fields: [userId], references: [id])
+  savedEvents SavedEvent[]
+
+  @@map("subscriptions")
+}
+
+// -- households (TDD 8.4) - V2 per FR-10, schema included now per TDD's
+//    own data model (8.1), no V2 endpoints built yet --
+
+model Household {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  ownerUserId String   @map("owner_user_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  owner         User           @relation("HouseholdOwner", fields: [ownerUserId], references: [id])
+  memberships   Membership[]
+  subscriptions Subscription[]
+
+  @@map("households")
+}
+
+// -- memberships (TDD 8.5) - V2 --
+
+model Membership {
+  id          String        @id @default(uuid()) @db.Uuid
+  householdId String        @map("household_id") @db.Uuid
+  userId      String        @map("user_id") @db.Uuid
+
+  // TODO: TDD defines owner/member roles but never specifies what a "member"
+  // is permitted to do (view-only vs edit/delete shared subscriptions).
+  // Flagged earlier, unresolved - needs client decision before V2 authorization
+  // logic is written.
+  role      HouseholdRole
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  household Household @relation(fields: [householdId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("memberships")
+}
+
+// -- saved_events (TDD 8.6) - money-saved tracking, FR-7 --
+
+model SavedEvent {
+  id             String @id @default(uuid()) @db.Uuid
+  userId         String @map("user_id") @db.Uuid
+  subscriptionId String @map("subscription_id") @db.Uuid
+
+  // TODO: TDD doesn't define how this is computed for a canceled subscription
+  // on a custom/non-monthly billing cycle, or what happens if a canceled
+  // subscription is later reactivated (does this event get reversed?).
+  // Flagged earlier, unresolved.
+  monthlyAmountSaved Decimal  @db.Decimal(10, 2) @map("monthly_amount_saved")
+  canceledAt         DateTime @map("canceled_at")
+
+  user         User         @relation(fields: [userId], references: [id])
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@map("saved_events")
+}
+
+// TODO: not in TDD Section 8 -- added ahead of real IAP integration so that
+// wiring in actual purchase recording later (FR-11) is additive to the
+// schema, not a migration surprise. Minimal columns; not modeling refunds,
+// trials, or renewal cycles until a real provider (App Store/Play Store)
+// is integrated and its actual receipt structure is known.
+model PaymentEvent {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  provider          String   // e.g. "app_store", "play_store"
+  productId         String   @map("product_id")
+  receiptReference  String   @map("receipt_reference")
+  amount            Decimal  @db.Decimal(10, 2)
+  currency          String
+  purchasedAt       DateTime @map("purchased_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("payment_events")
+}

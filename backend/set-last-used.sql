@@ -1,0 +1,1 @@
+UPDATE subscriptions SET last_used_date = CURRENT_DATE - INTERVAL '40 days' WHERE id = '9df4cafb-cd82-4c27-9508-7c2db95a56c3';
