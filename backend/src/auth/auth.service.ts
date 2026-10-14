@@ -141,7 +141,7 @@ constructor(
       //console.log(`[DEV] Password reset link for ${user.email}: http://localhost:3000/reset-password?token=${token}`);
     await this.emailService.sendPasswordResetEmail(
   user.email,
-  `http://localhost:3000/reset-password?token=${token}`,
+ `${process.env.PUBLIC_API_URL ?? 'http://localhost:3000'}/reset-password?token=${token}`,
 );
     }
 
