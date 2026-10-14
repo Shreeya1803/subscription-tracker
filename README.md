@@ -119,6 +119,10 @@ Expo reads `.env` only at startup. Restart with `npx expo start -c` after changi
 | `JWT_ACCESS_SECRET` | Secret for access tokens (15 min lifetime). Use a long random value |
 | `JWT_REFRESH_SECRET` | Secret for refresh tokens (7 day lifetime, rotated on every refresh). Use a different random value |
 | `PORT` | Optional. Defaults to `3000` |
+| `PUBLIC_API_URL` | Address users' browsers use to reach the API. It goes in the password-reset link (HTTPS in production) |
+| `APP_NAME` | Name shown in emails |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | Email provider settings. If `SMTP_HOST` is empty, reset links are only printed to the API console |
+| `EMAIL_FROM` | Sender address, on a domain verified with your email provider |
 
 **`frontend/.env`**
 
