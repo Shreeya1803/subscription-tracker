@@ -5,6 +5,7 @@ import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { Category, getDaysUntil, useSubscriptions } from '@/context/SubscriptionContext';
+import { useAddSubscription } from '@/hooks/useAddSubscription';
 import {
   EmptyState,
   FilterChip,
@@ -20,6 +21,7 @@ export default function SubscriptionsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { subscriptions, hydrated } = useSubscriptions();
+  const { openAdd } = useAddSubscription();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<Category | 'all'>('all');
   const [sort, setSort] = useState<SortMode>('renewal');
@@ -89,7 +91,7 @@ export default function SubscriptionsScreen() {
             title={query || category !== 'all' ? 'No matches found' : 'Start your list'}
             message={query || category !== 'all' ? 'Try another search or category.' : 'Add the recurring services you want to keep an eye on.'}
             action={!query && category === 'all' ? (
-              <Pressable onPress={() => router.push('/add')} style={[styles.emptyAction, { backgroundColor: colors.primary }]}>
+              <Pressable onPress={openAdd} style={[styles.emptyAction, { backgroundColor: colors.primary }]}>
                 <Text style={[styles.emptyActionText, { color: colors.primaryForeground }]}>Add first subscription</Text>
               </Pressable>
             ) : undefined}

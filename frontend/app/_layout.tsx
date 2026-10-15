@@ -42,6 +42,16 @@ function RootLayoutNav() {
             contentStyle: { backgroundColor: 'transparent' },
           }}
         />
+        <Stack.Screen
+  name="upgrade"
+  options={{
+    presentation: 'formSheet',
+    sheetAllowedDetents: [0.92],
+    sheetGrabberVisible: true,
+    headerShown: false,
+    contentStyle: { backgroundColor: 'transparent' },
+  }}
+/>
         <Stack.Screen name="subscription/[id]" options={{ headerShown: false }} />
       </Stack.Protected>
       <Stack.Protected guard={signedOut}>

@@ -62,6 +62,12 @@ export default function AddSubscriptionScreen() {
       if (editing) await updateSubscription(editing.id, values);
       else await addSubscription(values);
     } catch (e: any) {
+      // The server enforces the free-plan limit with a 403: open the upgrade screen instead of an inline error.
+if (!editing && e?.status === 403) {
+  setSaving(false);
+  router.replace('/upgrade');
+  return;
+}
       // e.g. 403 "Free tier is limited to 3 active subscriptions..." comes straight from the backend
       setError(e?.message ?? 'Could not save. Please try again.');
       setSaving(false);

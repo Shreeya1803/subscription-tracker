@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@/context/AuthContext';
+import { useAddSubscription } from '@/hooks/useAddSubscription';
 import { formatMoney, formatRenewal, getDaysUntil, useSubscriptions } from '@/context/SubscriptionContext';
 import { AppMark, EmptyState, IconButton, SectionHeading, SubscriptionRow, categoryIcons, categoryLabels } from '@/components/SubscriptionUI';
 
@@ -13,6 +14,7 @@ export default function OverviewScreen() {
   const insets = useSafeAreaInsets();
   const { subscriptions, summary, hydrated, loadError, monthlyEquivalent } = useSubscriptions();
   const { user } = useAuth();
+  const { openAdd } = useAddSubscription();
   const currency = user?.defaultCurrency ?? 'USD';
   const active = subscriptions.filter((item) => item.status === 'active');
   // Totals come from the backend (/dashboard/summary); fall back to local math only while it loads.
@@ -92,7 +94,7 @@ export default function OverviewScreen() {
 
       <Pressable
         testID="add-subscription"
-        onPress={() => router.push('/add')}
+        onPress={openAdd}
         accessibilityRole="button"
         style={({ pressed }) => [styles.addPrompt, { backgroundColor: colors.accent, borderColor: colors.warning }, pressed && { opacity: 0.8 }]}
       >

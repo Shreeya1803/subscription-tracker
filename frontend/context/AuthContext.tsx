@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { AppState } from 'react-native';
 import {
   ApiUser,
   authApi,
@@ -19,6 +20,7 @@ type AuthContextValue = {
   signup: (input: { displayName: string; email: string; password: string; defaultCurrency: string }) => Promise<void>;
   logout: () => Promise<void>;
   deleteAccount: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -89,6 +91,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [endSession]);
 
   const logout = wipeLocal;
+     // Re-read the account (plan, name...) from the server. Errors are ignored: the cached user stays.
+   const refreshUser = useCallback(async () => {
+     try {
+       const me = await userApi.me();
+       setUser(me);
+       await AsyncStorage.setItem('st_cached_user', JSON.stringify(me));
+     } catch {
+       /* offline or session ended: keep what we have */
+     }
+   }, []);
+
+   // A plan can change while the app is in the background (purchase, renewal, cancellation).
+   useEffect(() => {
+     if (status !== 'signedIn') return;
+     const sub = AppState.addEventListener('change', (state) => {
+       if (state === 'active') void refreshUser();
+     });
+     return () => sub.remove();
+   }, [status, refreshUser]);
 
   const deleteAccount = useCallback(async () => {
     await userApi.remove();
@@ -96,8 +117,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [wipeLocal]);
 
   const value = useMemo(
-    () => ({ status, user, login, signup, logout, deleteAccount }),
-    [status, user, login, signup, logout, deleteAccount],
+    () => ({ status, user, login, signup, logout, deleteAccount,refreshUser  }),
+    [status, user, login, signup, logout, deleteAccount,refreshUser ],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
