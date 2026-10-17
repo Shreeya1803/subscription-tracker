@@ -61,6 +61,11 @@ model User {
   // added as a prerequisite, same as reset-password was added alongside
   // forgot-password.
   pushToken String? @map("push_token")
+    // Premium state, set by the RevenueCat webhook and /billing/sync.
+  // premiumExpiresAt is null for "lifetime" and for free users.
+  premiumExpiresAt DateTime? @map("premium_expires_at")
+  premiumProductId String?   @map("premium_product_id")
+  premiumStore     String?   @map("premium_store")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
@@ -197,8 +202,12 @@ model PaymentEvent {
   provider          String   // e.g. "app_store", "play_store"
   productId         String   @map("product_id")
   receiptReference  String   @map("receipt_reference")
-  amount            Decimal  @db.Decimal(10, 2)
-  currency          String
+  // Price is only known for purchase/renewal events, so these are optional.
+  amount            Decimal? @db.Decimal(10, 2)
+  currency          String?
+  // RevenueCat event id (unique, so a re-delivered webhook is processed once) and type.
+  eventId           String?  @unique @map("event_id")
+  eventType         String?  @map("event_type")
   purchasedAt       DateTime @map("purchased_at")
   createdAt         DateTime @default(now()) @map("created_at")
 
@@ -206,3 +215,4 @@ model PaymentEvent {
 
   @@map("payment_events")
 }
+

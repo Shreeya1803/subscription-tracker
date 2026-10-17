@@ -100,6 +100,8 @@ async getMe(userId: string) {
       displayName: true,
       defaultCurrency: true,
       premiumStatus: true,
+      premiumExpiresAt: true,
+      
     },
   });
 }

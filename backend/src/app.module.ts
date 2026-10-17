@@ -10,6 +10,7 @@ import { UserModule } from './user/user.module';
 import { HouseholdModule } from './household/household.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RemindersModule } from './reminders/reminders.module';
+import { BillingModule } from './billing/billing.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { RemindersModule } from './reminders/reminders.module';
     UserModule,
     HouseholdModule,
     ScheduleModule.forRoot(),
-    RemindersModule
+    RemindersModule,
+      BillingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
