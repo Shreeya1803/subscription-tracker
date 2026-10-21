@@ -136,6 +136,7 @@ export type ApiUser = {
   displayName: string;
   defaultCurrency: string;
   premiumStatus: 'free' | 'monthly' | 'annual' | 'lifetime';
+    premiumExpiresAt?: string | null;
 };
 export type AuthResponse = { user: ApiUser; accessToken: string; refreshToken: string };
 
@@ -199,7 +200,16 @@ export const subscriptionsApi = {
   remove: (id: string) => request<{ message: string }>(`/subscriptions/${id}`, { method: 'DELETE' }),
   cancel: (id: string) => request<ApiSubscription>(`/subscriptions/${id}/cancel`, { method: 'POST' }),
 };
+export const billingApi = {
+  /** Asks the backend to check RevenueCat now (right after a purchase or restore). */
+  sync: () =>
+    request<{ premiumStatus: ApiUser['premiumStatus']; premiumExpiresAt: string | null; synced: boolean }>(
+      '/billing/sync',
+      { method: 'POST' },
+    ),
+};
 
 export const dashboardApi = {
   summary: () => request<ApiDashboardSummary>('/dashboard/summary'),
+
 };

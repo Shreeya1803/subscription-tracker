@@ -10,6 +10,8 @@ import {
   setSessionLostHandler,
   userApi,
 } from '@/lib/api';
+import { identifyPurchaser, resetPurchaser } from '@/lib/purchases';
+
 
 type AuthStatus = 'loading' | 'signedOut' | 'signedIn';
 
@@ -43,12 +45,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const me = await userApi.me();
         setUser(me);
         setStatus('signedIn');
+                   void identifyPurchaser(me.id).catch(() => {});
       } catch (e: any) {
         // Offline at launch: keep the session if tokens exist but the server is unreachable.
         if (e?.status === 0) {
           const cached = await AsyncStorage.getItem('st_cached_user');
           if (cached) {
-            setUser(JSON.parse(cached));
+                          const cachedUser = JSON.parse(cached) as ApiUser;
+               setUser(cachedUser);
+               void identifyPurchaser(cachedUser.id).catch(() => {});
             return setStatus('signedIn');
           }
         }
@@ -64,6 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem('st_cached_user', JSON.stringify(res.user));
     setUser(res.user);
     setStatus('signedIn');
+           void identifyPurchaser(res.user.id).catch(() => {});
   }, []);
 
   const login = useCallback(
@@ -85,6 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const wipeLocal = useCallback(async () => {
+           await resetPurchaser();
     await clearTokens();
     await AsyncStorage.multiRemove(['st_cached_user', 'st_cached_subscriptions']);
     endSession();

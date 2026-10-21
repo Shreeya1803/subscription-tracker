@@ -158,6 +158,14 @@ export default function SettingsScreen() {
             </Text>
           </View>
         </View>
+                <View style={[styles.settingsCard, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 12 }]}>
+          <SettingsRow
+            icon="star"
+            title={user?.premiumStatus && user.premiumStatus !== 'free' ? 'Manage Premium' : 'Upgrade to Premium'}
+            subtitle="See plans, restore a purchase or manage your subscription"
+            onPress={() => router.push('/upgrade')}
+          />
+        </View>
       </View>
 
       <View style={styles.section}>

@@ -12,3 +12,19 @@ export const PLANS: { id: PlanId; title: string; blurb: string }[] = [
   { id: 'annual', title: 'Annual', blurb: 'Billed once a year. Cancel any time.' },
   { id: 'lifetime', title: 'Lifetime', blurb: 'One payment, yours to keep.' },
 ];
+
+
+/**
+ * Fill in the real pages before release. Apple and Google expect Terms and Privacy
+ * links on any screen that sells a subscription. Empty strings hide the links.
+ */
+export const LEGAL = {
+  termsUrl: 'https://www.kolhsys.com/support', 
+  privacyUrl: 'https://www.kolhsys.com/privacy-policy',
+};
+
+/** Where users manage or cancel a subscription (the store handles it, not the app). */
+export const MANAGE_SUBSCRIPTION_URL = {
+  ios: 'https://apps.apple.com/account/subscriptions',
+  android: 'https://play.google.com/store/account/subscriptions',
+};
