@@ -1,0 +1,24 @@
+{
+  "cli": {
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal"
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://REPLACE-WITH-HOSTED-API",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_VGwqXTXuUUipcDhDoMREYmbueKR"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

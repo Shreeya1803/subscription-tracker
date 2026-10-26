@@ -13,10 +13,11 @@
       "resizeMode": "contain"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "bundleIdentifier": "com.kolhsys.subscriptiontracker"
     },
     "android": {
-      "package": "com.sh1803.subscriptiontracker"
+      "package": "com.kolhsys.subscriptiontracker"
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -27,6 +28,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "0fa0f660-c655-4847-87c4-347e426c8a55"
+      }
+    },
+    "owner": "kolhsys"
   }
 }
