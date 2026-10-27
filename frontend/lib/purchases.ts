@@ -7,8 +7,10 @@ import type { PlanId } from '@/lib/plan';
  * During development set EXPO_PUBLIC_REVENUECAT_TEST_KEY (Test Store, no real money).
  * For store builds set the platform keys and REMOVE the test key: a Test Store key must never ship.
  */
+// The Test Store key is only ever used in development (Expo Go / dev client). Release builds
+// always use the platform keys, even if a local .env with the test key was bundled by mistake.
 const API_KEY =
-  process.env.EXPO_PUBLIC_REVENUECAT_TEST_KEY ||
+  (__DEV__ ? process.env.EXPO_PUBLIC_REVENUECAT_TEST_KEY : undefined) ||
   (Platform.OS === 'ios'
     ? process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY
     : process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY) ||
