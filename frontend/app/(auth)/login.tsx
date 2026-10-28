@@ -1,6 +1,6 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { AuthField, AuthShell, ErrorNote } from '@/components/AuthUI';
 import { PrimaryButton } from '@/components/SubscriptionUI';
 import { useAuth } from '@/context/AuthContext';
@@ -8,7 +8,7 @@ import { useColors } from '@/hooks/useColors';
 
 export default function LoginScreen() {
   const colors = useColors();
-  const { login } = useAuth();
+  const { login, resendSignupCode } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,6 +21,12 @@ export default function LoginScreen() {
     try {
       await login(email, password);
     } catch (e: any) {
+      if (e?.code === 'EMAIL_NOT_CONFIRMED') {
+        // Account exists but the email was never confirmed: send a fresh code and ask for it.
+        await resendSignupCode(email).catch(() => {});
+        router.push({ pathname: '/verify-email', params: { email: email.trim().toLowerCase() } });
+        return;
+      }
       setError(e?.message ?? 'Could not sign in.');
     } finally {
       setBusy(false);

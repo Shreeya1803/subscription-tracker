@@ -1,4 +1,4 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { AuthField, AuthShell, ErrorNote } from '@/components/AuthUI';
@@ -23,7 +23,8 @@ export default function SignupScreen() {
     setBusy(true);
     setError('');
     try {
-      await signup({ displayName, email, password, defaultCurrency: currency });
+      const sentTo = await signup({ displayName, email, password, defaultCurrency: currency });
+      router.push({ pathname: '/verify-email', params: { email: sentTo } });
     } catch (e: any) {
       setError(e?.message ?? 'Could not create your account.');
     } finally {
