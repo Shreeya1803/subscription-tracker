@@ -33,6 +33,13 @@ const sub = (name, extra = {}) => ({
 });
 
 console.log('\nSubscriptions');
+{
+  // Before the user reaches the free limit, so the validation error is not masked by it.
+  const { error } = await supabase.from('subscriptions').insert(sub('Bad', { billing_cycle: 'custom' }));
+  if (!error) fail('custom cycle without days accepted');
+  if (error.code !== '23514') fail(`expected a check-constraint error (23514), got ${error.code}: ${error.message}`);
+  ok(`invalid data rejected (${error.code}: ${error.message})`);
+}
 for (const n of ['One', 'Two', 'Three']) {
   const { error } = await supabase.from('subscriptions').insert(sub(n));
   if (error) fail(`add ${n}: ${error.message}`);
@@ -51,7 +58,6 @@ ok('free user added 3 subscriptions');
   if (!error) fail('custom cycle without days accepted');
   ok(`invalid data rejected (${error.code}: ${error.message.split('"')[1] ?? error.message})`);
 }
-
 {
   const { data, error } = await supabase.from('subscriptions').update({ name: 'One (edited)' }).eq('name', 'One').select();
   if (error || data.length !== 1) fail(`edit: ${error?.message}`);
