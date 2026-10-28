@@ -1,0 +1,12 @@
+{
+  "name": "subscription-tracker-supabase",
+  "private": true,
+  "type": "module",
+  "description": "Supabase migrations, Edge Functions and test scripts for Subscription Tracker",
+  "scripts": {
+    "test:auth": "node tests/auth-smoke.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.118.0"
+  }
+}
