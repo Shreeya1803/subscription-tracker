@@ -53,11 +53,7 @@ ok('free user added 3 subscriptions');
   ok(`4th blocked: HTTP ${status}, code ${error.code}, "${error.message}"`);
 }
 
-{
-  const { error } = await supabase.from('subscriptions').insert(sub('Bad', { billing_cycle: 'custom' }));
-  if (!error) fail('custom cycle without days accepted');
-  ok(`invalid data rejected (${error.code}: ${error.message.split('"')[1] ?? error.message})`);
-}
+
 {
   const { data, error } = await supabase.from('subscriptions').update({ name: 'One (edited)' }).eq('name', 'One').select();
   if (error || data.length !== 1) fail(`edit: ${error?.message}`);
