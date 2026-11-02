@@ -271,7 +271,18 @@ export const userApi = {
     if (error) throw toApiError(error, status);
     return camelizeDeep(data);
   },
+  /** Saves this phone's Expo push token for renewal reminders (moves it away from any previous account). */
+  registerPushToken: async (token: string) => {
+    const { error, status } = await supabase.rpc('register_push_token', { p_token: token });
+    if (error) throw toApiError(error, status);
+  },
 
+  /** Stops reminders on this phone for the signed-in account. */
+  clearPushToken: async () => {
+    const id = await currentUserId();
+    const { error, status } = await supabase.from('users').update({ push_token: null }).eq('id', id);
+    if (error) throw toApiError(error, status);
+  },
   /** Deletes the account and all its data (Edge Function: needs the server-side key). */
   remove: async () => {
     const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });

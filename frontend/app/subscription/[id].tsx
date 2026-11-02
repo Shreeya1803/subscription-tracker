@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+   import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { formatMoney, formatRenewal, getDaysUntil, useSubscriptions } from '@/context/SubscriptionContext';
@@ -12,10 +12,19 @@ export default function SubscriptionDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { subscriptions, deleteSubscription, cancelSubscription, monthlyEquivalent } = useSubscriptions();
-  const subscription = subscriptions.find((item) => item.id === id);
+     const { subscriptions, hydrated, deleteSubscription, cancelSubscription, monthlyEquivalent } = useSubscriptions();
+     const subscription = subscriptions.find((item) => item.id === id);
 
-  if (!subscription) {
+     // Opened from a reminder before the list has loaded: wait instead of showing "not found".
+     if (!subscription && !hydrated) {
+       return (
+         <View style={[styles.missing, { backgroundColor: colors.background }]}>
+           <ActivityIndicator color={colors.accentForeground} />
+         </View>
+       );
+     }
+
+     if (!subscription) {
     return (
       <View style={[styles.missing, { backgroundColor: colors.background }]}>
         <Feather name="search" size={26} color={colors.mutedForeground} />

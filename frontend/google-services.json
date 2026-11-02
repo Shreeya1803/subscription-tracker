@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "304357414274",
+    "project_id": "subscript-tracker",
+    "storage_bucket": "subscript-tracker.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:304357414274:android:fe756034ab01eda201eb9b",
+        "android_client_info": {
+          "package_name": "com.kolhsys.subscriptiontracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAz4CFzo4V0-Ljyw7oSlmVznmBm8zAfbQo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

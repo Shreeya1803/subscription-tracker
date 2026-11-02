@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import React, { useEffect, useRef } from 'react';import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -10,20 +9,35 @@ import {
   Inter_700Bold,
   useFonts,
 } from '@expo-google-fonts/inter';
-import { Stack } from 'expo-router';
+   import * as Notifications from 'expo-notifications';
+   import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
-
+   import '@/lib/notifications'; // shows reminders while the app is open
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
-  const { status } = useAuth();
+       const { status } = useAuth();
+     const lastNotification = Notifications.useLastNotificationResponse();
+     const openedNotification = useRef<string | null>(null);
 
-  useEffect(() => {
-    if (status !== 'loading') SplashScreen.hideAsync();
-  }, [status]);
+     useEffect(() => {
+       if (status !== 'loading') SplashScreen.hideAsync();
+     }, [status]);
+
+     // Tapping a renewal reminder opens that subscription (once signed in).
+     useEffect(() => {
+       if (status !== 'signedIn' || !lastNotification) return;
+       const { identifier, content } = lastNotification.notification.request;
+       if (openedNotification.current === identifier) return;
+       openedNotification.current = identifier;
+       const id = content.data?.subscriptionId;
+       if (typeof id === 'string') {
+         setTimeout(() => router.push({ pathname: '/subscription/[id]', params: { id } }), 0);
+       }
+     }, [lastNotification, status]);
 
   if (status === 'loading') return null;
   const signedIn = status === 'signedIn';

@@ -17,14 +17,23 @@
       "bundleIdentifier": "com.kolhsys.subscriptiontracker"
     },
     "android": {
-      "package": "com.kolhsys.subscriptiontracker"
+      "package": "com.kolhsys.subscriptiontracker",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/images/icon.png"
     },
-    "plugins": [
-      "expo-router"
-    ],
+   "plugins": [
+     "expo-router",
+     [
+       "expo-notifications",
+       {
+         "icon": "./assets/images/notification-icon.png",
+         "color": "#F0C274",
+         "defaultChannel": "renewal-reminders"
+       }
+     ]
+   ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

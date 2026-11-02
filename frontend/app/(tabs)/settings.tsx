@@ -1,13 +1,14 @@
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
-import React from 'react';
-import { Alert, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, AppState, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@/context/AuthContext';
 import { userApi } from '@/lib/api';
 import { exportAccountPdf, ExportData } from '@/lib/exportPdf';
+import { getReminderPermission, openNotificationSettings, registerForReminders, ReminderPermission } from '@/lib/notifications';
 import { formatMoney, useSubscriptions } from '@/context/SubscriptionContext';
 import { AppMark, SectionHeading } from '@/components/SubscriptionUI';
 
@@ -55,6 +56,36 @@ export default function SettingsScreen() {
   const active = subscriptions.filter((item) => item.status === 'active');
   const monthly = summary?.monthlyTotal ?? 0;
   const planLabel = user?.premiumStatus && user.premiumStatus !== 'free' ? `Premium (${user.premiumStatus})` : 'Free plan';
+
+       // Whether this phone can receive renewal reminders. Re-checked when the screen opens and when the
+     // user comes back from the phone's settings.
+     const [reminderPermission, setReminderPermission] = useState<ReminderPermission>('undetermined');
+     const checkReminders = useCallback(() => {
+       void getReminderPermission().then((status) => {
+         setReminderPermission(status);
+         if (status === 'granted') void registerForReminders({ ask: false }).catch(() => {});
+       });
+     }, []);
+     useFocusEffect(checkReminders);
+     useEffect(() => {
+       const sub = AppState.addEventListener('change', (state) => state === 'active' && checkReminders());
+       return () => sub.remove();
+     }, [checkReminders]);
+
+     const reminderSubtitle: Record<ReminderPermission, string> = {
+       granted: 'On for this phone. Choose the days for each subscription.',
+       denied: 'Notifications are off for this app. Tap to turn them on.',
+       undetermined: 'Tap to get a reminder before your subscriptions renew.',
+       unsupported: 'Reminders work in the installed app.',
+     };
+     const onRemindersPress = async () => {
+       if (reminderPermission === 'denied') return openNotificationSettings();
+       if (reminderPermission === 'undetermined') {
+         setReminderPermission(await registerForReminders({ ask: true }).catch(() => 'undetermined' as const));
+         return;
+       }
+       router.push('/(tabs)/subscriptions');
+     };
 
   const exportJson = async () => {
     try {
@@ -139,8 +170,8 @@ export default function SettingsScreen() {
           <SettingsRow
             icon="sliders"
             title="Reminders"
-            subtitle="Set reminders per subscription when you add or edit it"
-            onPress={() => router.push('/(tabs)/subscriptions')}
+               subtitle={reminderSubtitle[reminderPermission]}
+               onPress={() => void onRemindersPress()}
           />
         </View>
       </View>

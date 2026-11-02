@@ -10,6 +10,7 @@ import React, {
 import { useAuth } from '@/context/AuthContext';
 import { ApiDashboardSummary, dashboardApi, subscriptionsApi } from '@/lib/api';
 import { fromApi, toApiBody, toApiPatch } from '@/lib/mappers';
+import { registerForReminders } from '@/lib/notifications';
 
 export type BillingCycle = 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
 export type Category = 'entertainment' | 'utilities' | 'work' | 'health' | 'other';
@@ -116,6 +117,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
     async (input: SubscriptionInput) => {
       await subscriptionsApi.create(toApiBody(input)); // throws ApiError (e.g. 403 free-tier limit)
       await refresh();
+               // First reminder the user turns on: ask for notification permission (only asks once).
+         if (input.reminderEnabled) void registerForReminders({ ask: true }).catch(() => {});
     },
     [refresh],
   );
@@ -127,6 +130,8 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
       const patch = toApiPatch(prev, input);
       if (Object.keys(patch).length > 0) await subscriptionsApi.update(id, patch);
       await refresh();
+               // First reminder the user turns on: ask for notification permission (only asks once).
+         if (input.reminderEnabled) void registerForReminders({ ask: true }).catch(() => {});
     },
     [refresh, subscriptions],
   );

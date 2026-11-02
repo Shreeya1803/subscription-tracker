@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import { ApiUser, authApi, userApi } from '@/lib/api';
+   import { registerForReminders, unregisterFromReminders } from '@/lib/notifications';
 import { identifyPurchaser, resetPurchaser } from '@/lib/purchases';
 import { supabase } from '@/lib/supabase';
 
@@ -47,9 +48,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(me);
     setStatus('signedIn');
     void identifyPurchaser(me.id).catch(() => {});
+           // If reminders were already allowed on this phone, make sure this account receives them.
+       void registerForReminders({ ask: false }).catch(() => {});
   }, []);
 
   const wipeLocal = useCallback(async () => {
+    await unregisterFromReminders();
     await resetPurchaser();
     await authApi.logout().catch(() => {});
     await AsyncStorage.multiRemove([CACHED_USER_KEY, 'st_cached_subscriptions']);
