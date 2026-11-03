@@ -73,19 +73,19 @@ export default function SettingsScreen() {
      }, [checkReminders]);
 
      const reminderSubtitle: Record<ReminderPermission, string> = {
-       granted: 'On for this phone. Choose the days for each subscription.',
+       granted: 'On for this phone. Tap to manage notifications.',
        denied: 'Notifications are off for this app. Tap to turn them on.',
        undetermined: 'Tap to get a reminder before your subscriptions renew.',
        unsupported: 'Reminders work in the installed app.',
      };
-     const onRemindersPress = async () => {
-       if (reminderPermission === 'denied') return openNotificationSettings();
-       if (reminderPermission === 'undetermined') {
-         setReminderPermission(await registerForReminders({ ask: true }).catch(() => 'undetermined' as const));
-         return;
-       }
-       router.push('/(tabs)/subscriptions');
-     };
+  const onRemindersPress = async () => {
+    if (reminderPermission === 'unsupported') return;
+    if (reminderPermission === 'undetermined') {
+      setReminderPermission(await registerForReminders({ ask: true }).catch(() => 'undetermined' as const));
+      return;
+    }
+    await openNotificationSettings();
+  };
 
   const exportJson = async () => {
     try {
@@ -168,7 +168,7 @@ export default function SettingsScreen() {
         <SectionHeading title="Preferences" />
         <View style={[styles.settingsCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <SettingsRow
-            icon="sliders"
+            icon="bell"
             title="Reminders"
                subtitle={reminderSubtitle[reminderPermission]}
                onPress={() => void onRemindersPress()}

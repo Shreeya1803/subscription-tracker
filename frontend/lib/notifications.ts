@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
+import * as Application from 'expo-application';
 import * as Notifications from 'expo-notifications';
 import { Linking, Platform } from 'react-native';
 import { userApi } from '@/lib/api';
@@ -72,6 +73,17 @@ export async function unregisterFromReminders() {
 }
 
 /** Notifications were turned off for the app: only the phone's settings can turn them back on. */
-export function openNotificationSettings() {
-  void Linking.openSettings();
+/** Opens this app's notification settings on the phone (on/off, sound, vibration). */
+export async function openNotificationSettings() {
+  if (Platform.OS === 'android' && Application.applicationId) {
+    try {
+      await Linking.sendIntent('android.settings.APP_NOTIFICATION_SETTINGS', [
+        { key: 'android.provider.extra.APP_PACKAGE', value: Application.applicationId },
+      ]);
+      return;
+    } catch {
+      /* some phones don't support this screen: fall back to the app's info page */
+    }
+  }
+  await Linking.openSettings();
 }
