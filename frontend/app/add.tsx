@@ -3,11 +3,12 @@ import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useMemo, useState } from 'react';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@/context/AuthContext';
 import { BillingCycle, Category, SubscriptionInput, useSubscriptions } from '@/context/SubscriptionContext';
 import { PrimaryButton, categoryIcons, categoryLabels } from '@/components/SubscriptionUI';
+import { CalendarSheet, formatLongDate, toIsoDate } from '@/components/CalendarSheet';
 import { CurrencySheet } from '@/components/CurrencyPicker';
 
 const cycles: BillingCycle[] = ['monthly', 'yearly', 'weekly', 'quarterly'];
@@ -23,7 +24,7 @@ export default function AddSubscriptionScreen() {
   const [name, setName] = useState(editing?.name ?? params.name ?? '');
   const [amount, setAmount] = useState(editing?.amount ? String(editing.amount) : '');
   const [cycle, setCycle] = useState<BillingCycle>(editing?.billingCycle ?? 'monthly');
-  const [renewal, setRenewal] = useState(editing?.nextRenewal ?? new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10));
+  const [renewal, setRenewal] = useState(editing?.nextRenewal ?? toIsoDate(new Date(Date.now() + 7 * 86400000)));
   const [category, setCategory] = useState<Category>(
     editing?.category ?? (params.category && params.category in categoryLabels ? (params.category as Category) : 'entertainment'),
   );
@@ -34,6 +35,7 @@ export default function AddSubscriptionScreen() {
   const [saving, setSaving] = useState(false);
   const [currency, setCurrency] = useState(editing?.currency ?? user?.defaultCurrency ?? 'USD');
   const [currencyOpen, setCurrencyOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const save = async () => {
     const parsedAmount = Number.parseFloat(amount);
@@ -46,7 +48,7 @@ export default function AddSubscriptionScreen() {
       return;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(renewal)) {
-      setError('Use a date in YYYY-MM-DD format.');
+      setError('Choose the next renewal date.');
       return;
     }
     const values: SubscriptionInput = {
@@ -117,7 +119,10 @@ if (!editing && e?.status === 403) {
         <FieldLabel label="How much?" />
         <View style={styles.amountRow}>
           <Pressable
-            onPress={() => setCurrencyOpen(true)}
+            onPress={() => {
+              Keyboard.dismiss();
+              setCurrencyOpen(true);
+            }}
             accessibilityRole="button"
             accessibilityLabel={`Currency ${currency}. Tap to change.`}
             style={({ pressed }) => [styles.currencyBox, { backgroundColor: colors.secondary, borderColor: colors.border }, pressed && { opacity: 0.75 }]}
@@ -131,6 +136,7 @@ if (!editing && e?.status === 403) {
             placeholder="0.00"
             placeholderTextColor={colors.mutedForeground}
             keyboardType="decimal-pad"
+            returnKeyType="done"
             style={[styles.amountInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
             accessibilityLabel="Subscription amount"
           />
@@ -144,17 +150,26 @@ if (!editing && e?.status === 403) {
         </View>
 
         <FieldLabel label="Next renewal" />
-        <View style={[styles.dateInputWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Pressable
+          onPress={() => {
+            Keyboard.dismiss();
+            setCalendarOpen(true);
+          }}
+          accessibilityRole="button"
+          accessibilityLabel={`Next renewal: ${formatLongDate(renewal)}. Tap to change.`}
+          style={({ pressed }) => [styles.dateInputWrap, { backgroundColor: colors.card, borderColor: colors.border }, pressed && { opacity: 0.8 }]}
+        >
           <Feather name="calendar" size={17} color={colors.mutedForeground} />
-          <TextInput
-            value={renewal}
-            onChangeText={setRenewal}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor={colors.mutedForeground}
-            style={[styles.dateInput, { color: colors.foreground }]}
-            accessibilityLabel="Next renewal date"
-          />
-        </View>
+          <Text style={[styles.dateText, { color: colors.foreground }]}>{formatLongDate(renewal)}</Text>
+          <Feather name="chevron-down" size={17} color={colors.mutedForeground} />
+        </Pressable>
+        <CalendarSheet
+          visible={calendarOpen}
+          value={renewal}
+          title="Next renewal"
+          onSelect={setRenewal}
+          onClose={() => setCalendarOpen(false)}
+        />
 
         <FieldLabel label="Category" />
         <View style={styles.categoryGrid}>
@@ -211,6 +226,8 @@ if (!editing && e?.status === 403) {
           placeholderTextColor={colors.mutedForeground}
           style={[styles.notesInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
           multiline
+          returnKeyType="done"
+          submitBehavior="blurAndSubmit"
           textAlignVertical="top"
           accessibilityLabel="Notes"
         />
@@ -275,7 +292,7 @@ const styles = StyleSheet.create({
   cycleOption: { flex: 1, minHeight: 42, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   cycleText: { fontFamily: 'Inter_500Medium', fontSize: 11, textTransform: 'capitalize' },
   dateInputWrap: { minHeight: 52, borderRadius: 16, borderWidth: 1, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  dateInput: { flex: 1, minHeight: 50, fontFamily: 'Inter_400Regular', fontSize: 15 },
+  dateText: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 15 },
   categoryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   categoryOption: { minHeight: 42, paddingHorizontal: 12, borderRadius: 14, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 6 },
   categoryOptionText: { fontFamily: 'Inter_500Medium', fontSize: 11 },
