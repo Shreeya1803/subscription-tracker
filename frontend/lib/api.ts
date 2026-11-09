@@ -271,12 +271,6 @@ export const userApi = {
     if (error) throw toApiError(error, status);
     return camelizeDeep(data);
   },
-  /** Changes the currency used for totals and new subscriptions. */
-  updateCurrency: async (code: string) => {
-    const id = await currentUserId();
-    const { error, status } = await supabase.from('users').update({ default_currency: code }).eq('id', id);
-    if (error) throw toApiError(error, status);
-  },
   /** Saves this phone's Expo push token for renewal reminders (moves it away from any previous account). */
   registerPushToken: async (token: string) => {
     const { error, status } = await supabase.rpc('register_push_token', { p_token: token });
