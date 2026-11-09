@@ -4,8 +4,8 @@ import React, { useMemo, useState } from 'react';
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
-import { Category, getDaysUntil, useSubscriptions } from '@/context/SubscriptionContext';
 import { useAddSubscription } from '@/hooks/useAddSubscription';
+import { Category, getDaysUntil, useSubscriptions } from '@/context/SubscriptionContext';
 import {
   EmptyState,
   FilterChip,
@@ -47,7 +47,7 @@ export default function SubscriptionsScreen() {
         <View>
           <Text style={[styles.title, { color: colors.foreground }]}>Subscriptions</Text>
         </View>
-        <IconButton icon="plus" tone="primary" label="Add subscription" onPress={() => router.push('/add')} />
+        <IconButton icon="plus" tone="primary" label="Add subscription" onPress={openAdd} />
       </View>
       <View style={styles.searchWrap}>
         <SearchField value={query} onChangeText={setQuery} />

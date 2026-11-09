@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useSubscriptions } from '@/context/SubscriptionContext';
 import { useColors } from '@/hooks/useColors';
 import { billingApi } from '@/lib/api';
+import { openInApp } from '@/lib/links';
 import { FREE_ACTIVE_LIMIT, LEGAL, MANAGE_SUBSCRIPTION_URL, PLANS, PlanId } from '@/lib/plan';
 import {
   isAlreadyPurchased,
@@ -18,10 +19,10 @@ import {
   StorePlan,
 } from '@/lib/purchases';
 
-const benefits: { icon: keyof typeof Feather.glyphMap; title: string; text: string; soon?: boolean }[] = [
-  { icon: 'layers', title: 'Unlimited subscriptions', text: 'Track everything you pay for, with no cap.' },
-  { icon: 'trending-up', title: 'Spending trends', text: 'See how your spending changes over time.', soon: true },
-  { icon: 'eye-off', title: 'Unused-service alerts', text: 'Spot subscriptions you have stopped using.', soon: true },
+const benefits: { icon: keyof typeof Feather.glyphMap; title: string; soon?: boolean }[] = [
+  { icon: 'layers', title: 'Track unlimited subscriptions' },
+  { icon: 'trending-up', title: 'Spending trends', soon: true },
+  { icon: 'eye-off', title: 'Alerts for unused services', soon: true },
 ];
 
 const periodLabel: Record<PlanId, string> = { monthly: '/month', annual: '/year', lifetime: ' one-time' };
@@ -34,6 +35,7 @@ export default function UpgradeScreen() {
   const store = Platform.OS === 'ios' ? 'App Store' : 'Google Play';
   const activeCount = subscriptions.filter((s) => s.status === 'active').length;
   const isPremium = !!user && user.premiumStatus !== 'free';
+  const atLimit = !isPremium && activeCount >= FREE_ACTIVE_LIMIT;
 
   const [plans, setPlans] = useState<StorePlan[]>([]);
   const [loading, setLoading] = useState(purchasesAvailable);
@@ -161,10 +163,18 @@ export default function UpgradeScreen() {
     >
       <View style={styles.titleRow}>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>PREMIUM</Text>
-          <Text style={[styles.title, { color: colors.foreground }]}>{isPremium ? 'You are on Premium' : 'Track without limits'}</Text>
+          <Text style={[styles.title, { color: colors.foreground }]}>
+            {isPremium ? 'You are on Premium' : atLimit ? 'Free limit reached' : 'Track without limits'}
+          </Text>
+          {!isPremium ? (
+            <Text style={[styles.subtitle, { color: atLimit ? colors.accentForeground : colors.mutedForeground }]}>
+              {atLimit
+                ? `Free accounts can track ${FREE_ACTIVE_LIMIT} subscriptions. Upgrade to Premium to add more.`
+                : `You are tracking ${activeCount} of ${FREE_ACTIVE_LIMIT} free subscriptions.`}
+            </Text>
+          ) : null}
         </View>
-        <Pressable onPress={() => router.back()} accessibilityLabel="Close" style={styles.closeButton}>
+        <Pressable onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Close" hitSlop={8} style={styles.closeButton}>
           <Feather name="x" size={21} color={colors.foreground} />
         </Pressable>
       </View>
@@ -187,30 +197,18 @@ export default function UpgradeScreen() {
         </>
       ) : (
         <>
-          <View style={[styles.banner, { backgroundColor: colors.warningSoft }]}>
-            <Feather name="info" size={18} color={colors.warning} />
-            <Text style={[styles.bannerText, { color: colors.accentForeground }]}>
-              You are tracking {Math.min(activeCount, FREE_ACTIVE_LIMIT)} of {FREE_ACTIVE_LIMIT} free subscriptions. Upgrade to add more.
-            </Text>
-          </View>
-
-          <View style={styles.benefits}>
+          <View style={[styles.benefits, { backgroundColor: colors.card, borderColor: colors.border }]}>
             {benefits.map((b) => (
               <View key={b.title} style={styles.benefitRow}>
-                <View style={[styles.benefitIcon, { backgroundColor: colors.secondary }]}>
-                  <Feather name={b.icon} size={18} color={colors.secondaryForeground} />
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.benefitTitleRow}>
-                    <Text style={[styles.benefitTitle, { color: colors.foreground }]}>{b.title}</Text>
-                    {b.soon ? (
-                      <View style={[styles.pill, { backgroundColor: colors.accent }]}>
-                        <Text style={[styles.pillText, { color: colors.accentForeground }]}>Coming soon</Text>
-                      </View>
-                    ) : null}
+                <Feather name={b.icon} size={16} color={b.soon ? colors.mutedForeground : colors.success} />
+                <Text style={[styles.benefitTitle, { color: b.soon ? colors.mutedForeground : colors.foreground }]} numberOfLines={1}>
+                  {b.title}
+                </Text>
+                {b.soon ? (
+                  <View style={[styles.pill, { backgroundColor: colors.accent }]}>
+                    <Text style={[styles.pillText, { color: colors.accentForeground }]}>Soon</Text>
                   </View>
-                  <Text style={[styles.benefitText, { color: colors.mutedForeground }]}>{b.text}</Text>
-                </View>
+                ) : null}
               </View>
             ))}
           </View>
@@ -254,9 +252,8 @@ export default function UpgradeScreen() {
                           </View>
                         ) : null}
                       </View>
-                      <Text style={[styles.planBlurb, { color: colors.mutedForeground }]}>
-                        {p.store?.perMonth ? `${p.store.perMonth} · ` : ''}
-                        {p.blurb}
+                      <Text style={[styles.planBlurb, { color: colors.mutedForeground }]} numberOfLines={1}>
+                        {p.store?.perMonth ? `Just ${p.store.perMonth}` : p.blurb}
                       </Text>
                     </View>
                     {p.store ? (
@@ -278,32 +275,28 @@ export default function UpgradeScreen() {
             disabled={!!busy || loading || (purchasesAvailable && (!!loadError || !selectedHasStore))}
           />
 
-          <Pressable onPress={() => void restore()} disabled={!!busy} accessibilityRole="button" style={styles.restore}>
-            <Text style={[styles.restoreText, { color: colors.accentForeground }]}>
-              {busy === 'restore' ? 'Restoring…' : 'Restore purchases'}
-            </Text>
-          </Pressable>
+          <View style={styles.linkRow}>
+            <Pressable onPress={() => void restore()} disabled={!!busy} accessibilityRole="button" hitSlop={6}>
+              <Text style={[styles.restoreText, { color: colors.accentForeground }]}>
+                {busy === 'restore' ? 'Restoring…' : 'Restore purchases'}
+              </Text>
+            </Pressable>
+            {LEGAL.termsUrl ? (
+              <Pressable onPress={() => void openInApp(LEGAL.termsUrl)} accessibilityRole="link" hitSlop={6}>
+                <Text style={[styles.legalLink, { color: colors.mutedForeground }]}>Terms</Text>
+              </Pressable>
+            ) : null}
+            {LEGAL.privacyUrl ? (
+              <Pressable onPress={() => void openInApp(LEGAL.privacyUrl)} accessibilityRole="link" hitSlop={6}>
+                <Text style={[styles.legalLink, { color: colors.mutedForeground }]}>Privacy</Text>
+              </Pressable>
+            ) : null}
+          </View>
 
           <Text style={[styles.footnote, { color: colors.mutedForeground }]}>
-            Payment is charged to your {store} account. Monthly and annual plans renew automatically at the same price
-            until you cancel in your {store} account settings, at least 24 hours before the renewal date. Lifetime is a
-            single payment.
+            Charged to your {store} account. Monthly and annual plans renew automatically unless cancelled in {store} at
+            least 24 hours before renewal. Lifetime is a one-time payment.
           </Text>
-
-          {LEGAL.termsUrl || LEGAL.privacyUrl ? (
-            <View style={styles.legalRow}>
-              {LEGAL.termsUrl ? (
-                <Text onPress={() => void Linking.openURL(LEGAL.termsUrl)} style={[styles.legalLink, { color: colors.accentForeground }]}>
-                  Terms of Use
-                </Text>
-              ) : null}
-              {LEGAL.privacyUrl ? (
-                <Text onPress={() => void Linking.openURL(LEGAL.privacyUrl)} style={[styles.legalLink, { color: colors.accentForeground }]}>
-                  Privacy Policy
-                </Text>
-              ) : null}
-            </View>
-          ) : null}
         </>
       )}
     </ScrollView>
@@ -312,24 +305,23 @@ export default function UpgradeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 70, gap: 16 },
+  content: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 40, gap: 14 },
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  eyebrow: { fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 1.3, marginBottom: 4 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 29, letterSpacing: -0.6 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 24, lineHeight: 29, letterSpacing: -0.5 },
+  subtitle: { fontFamily: 'Inter_500Medium', fontSize: 13, lineHeight: 19, marginTop: 6 },
   closeButton: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
   banner: { borderRadius: 16, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 10 },
   bannerText: { flex: 1, fontFamily: 'Inter_500Medium', fontSize: 13, lineHeight: 19 },
-  benefits: { gap: 14, marginTop: 2 },
-  benefitRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  benefitIcon: { width: 38, height: 38, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  benefits: { gap: 11, borderRadius: 16, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 12 },
+  benefitRow: { flexDirection: 'row', gap: 10, alignItems: 'center' },
   benefitTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
-  benefitTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
+  benefitTitle: { flexShrink: 1, fontFamily: 'Inter_500Medium', fontSize: 14 },
   benefitText: { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 17, marginTop: 2 },
   pill: { borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
   pillText: { fontFamily: 'Inter_600SemiBold', fontSize: 10 },
   center: { alignItems: 'center', gap: 8, paddingVertical: 18 },
-  plans: { gap: 10 },
-  planCard: { borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  plans: { gap: 8 },
+  planCard: { borderRadius: 16, paddingHorizontal: 14, paddingVertical: 11, flexDirection: 'row', alignItems: 'center', gap: 12 },
   planTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 15 },
   planBlurb: { fontFamily: 'Inter_400Regular', fontSize: 12, marginTop: 2 },
   priceCol: { alignItems: 'flex-end' },
@@ -338,6 +330,6 @@ const styles = StyleSheet.create({
   restore: { alignItems: 'center', paddingVertical: 6 },
   restoreText: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
   footnote: { fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 16, textAlign: 'center' },
-  legalRow: { flexDirection: 'row', justifyContent: 'center', gap: 18 },
+  linkRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 22 },
   legalLink: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
 });
