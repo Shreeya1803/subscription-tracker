@@ -84,8 +84,10 @@ if (!editing && e?.status === 403) {
   };
 
   return (
+    // The keyboard opens only when a field is tapped, and closes when the form is scrolled.
     <KeyboardAwareScrollViewCompat
       bottomOffset={24}
+      keyboardDismissMode="on-drag"
       keyboardShouldPersistTaps="handled"
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.content}
@@ -108,7 +110,7 @@ if (!editing && e?.status === 403) {
           placeholder="e.g. Netflix"
           placeholderTextColor={colors.mutedForeground}
           style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-          autoFocus={!editing && !params.name}
+          returnKeyType="done"
           accessibilityLabel="Service name"
         />
 
