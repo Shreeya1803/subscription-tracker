@@ -1,19 +1,35 @@
 import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import { Pressable, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { AppMark } from '@/components/SubscriptionUI';
 import { useColors } from '@/hooks/useColors';
 
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   return (
     <KeyboardAwareScrollViewCompat
       bottomOffset={24}
       keyboardShouldPersistTaps="handled"
       style={{ flex: 1, backgroundColor: colors.background }}
-      contentContainerStyle={styles.content}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 16 }]}
     >
+      <View style={styles.topBar}>
+        {router.canGoBack() ? (
+          <Pressable
+            onPress={() => router.back()}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            hitSlop={8}
+            style={({ pressed }) => [styles.back, { backgroundColor: colors.card, borderColor: colors.border }, pressed && { opacity: 0.7 }]}
+          >
+            <Feather name="chevron-left" size={20} color={colors.foreground} />
+          </Pressable>
+        ) : null}
+      </View>
       <AppMark size={48} />
       <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text>
@@ -50,7 +66,9 @@ export function ErrorNote({ message }: { message: string }) {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 22, paddingTop: 90, paddingBottom: 50, gap: 8 },
+  content: { paddingHorizontal: 22, paddingBottom: 50, gap: 8 },
+  topBar: { height: 40, marginBottom: 22, justifyContent: 'center' },
+  back: { width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   title: { fontFamily: 'Inter_700Bold', fontSize: 30, letterSpacing: -0.6, marginTop: 14 },
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 20, marginBottom: 14 },
   form: { gap: 14 },

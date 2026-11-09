@@ -11,6 +11,9 @@ import { exportAccountPdf, ExportData } from '@/lib/exportPdf';
 import { getReminderPermission, openNotificationSettings, registerForReminders, ReminderPermission } from '@/lib/notifications';
 import { formatMoney, useSubscriptions } from '@/context/SubscriptionContext';
 import { AppMark, SectionHeading } from '@/components/SubscriptionUI';
+import { CurrencySheet } from '@/components/CurrencyPicker';
+import { findCurrency } from '@/lib/currencies';
+import { APP_NAME } from '@/lib/brand';
 
 function SettingsRow({
   icon,
@@ -51,7 +54,17 @@ export default function SettingsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { subscriptions, summary } = useSubscriptions();
-  const { user, logout, deleteAccount } = useAuth();
+  const { user, logout, deleteAccount, refreshUser } = useAuth();
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const changeCurrency = async (code: string) => {
+    if (code === currency) return;
+    try {
+      await userApi.updateCurrency(code);
+      await refreshUser();
+    } catch (e: any) {
+      Alert.alert('Currency not changed', e?.message ?? 'Check your connection and try again.');
+    }
+  };
   const currency = user?.defaultCurrency ?? 'USD';
   const active = subscriptions.filter((item) => item.status === 'active');
   const monthly = summary?.monthlyTotal ?? 0;
@@ -148,7 +161,6 @@ export default function SettingsScreen() {
         <View style={styles.brandLine}>
           <AppMark size={38} />
           <View>
-            <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>YOUR MONEY, CLEARER</Text>
             <Text style={[styles.title, { color: colors.foreground }]}>Settings</Text>
           </View>
         </View>
@@ -173,7 +185,15 @@ export default function SettingsScreen() {
                subtitle={reminderSubtitle[reminderPermission]}
                onPress={() => void onRemindersPress()}
           />
+          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
+          <SettingsRow
+            icon="dollar-sign"
+            title="Currency"
+            subtitle={`${findCurrency(currency)?.name ?? currency} (${currency}). Used for your totals and new subscriptions.`}
+            onPress={() => setCurrencyOpen(true)}
+          />
         </View>
+        <CurrencySheet visible={currencyOpen} value={currency} onSelect={(code) => void changeCurrency(code)} onClose={() => setCurrencyOpen(false)} />
       </View>
 
       <View style={styles.section}>
@@ -212,7 +232,7 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      <Text style={[styles.versionText, { color: colors.mutedForeground }]}>Subscription Tracker · v1.0</Text>
+      <Text style={[styles.versionText, { color: colors.mutedForeground }]}>{APP_NAME} · Version 1.0</Text>
     </ScrollView>
   );
 }

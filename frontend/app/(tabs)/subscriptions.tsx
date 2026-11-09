@@ -45,7 +45,6 @@ export default function SubscriptionsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 16 }]}>
       <View style={styles.header}>
         <View>
-          <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>YOUR MONEY, CLEARER</Text>
           <Text style={[styles.title, { color: colors.foreground }]}>Subscriptions</Text>
         </View>
         <IconButton icon="plus" tone="primary" label="Add subscription" onPress={() => router.push('/add')} />

@@ -7,11 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "subscription-tracker",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "backgroundColor": "#f8f6f1",
-      "image": "./assets/images/icon.png",
-      "resizeMode": "contain"
-    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.kolhsys.subscriptiontracker"
@@ -23,17 +18,30 @@
     "web": {
       "favicon": "./assets/images/icon.png"
     },
-   "plugins": [
-     "expo-router",
-     [
-       "expo-notifications",
-       {
-         "icon": "./assets/images/notification-icon.png",
-         "color": "#F0C274",
-         "defaultChannel": "renewal-reminders"
-       }
-     ]
-   ],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 120,
+          "resizeMode": "contain",
+          "backgroundColor": "#010E33",
+          "dark": {
+            "image": "./assets/images/splash-icon.png",
+            "backgroundColor": "#010E33"
+          }
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#F0C274",
+          "defaultChannel": "renewal-reminders"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

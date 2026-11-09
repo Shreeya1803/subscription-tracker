@@ -8,27 +8,32 @@ import { useColors } from '@/hooks/useColors';
 import { useAuth } from '@/context/AuthContext';
 import { BillingCycle, Category, SubscriptionInput, useSubscriptions } from '@/context/SubscriptionContext';
 import { PrimaryButton, categoryIcons, categoryLabels } from '@/components/SubscriptionUI';
+import { CurrencySheet } from '@/components/CurrencyPicker';
 
 const cycles: BillingCycle[] = ['monthly', 'yearly', 'weekly', 'quarterly'];
 const reminderChoices = [1, 3, 7, 14];
 
 export default function AddSubscriptionScreen() {
   const colors = useColors();
-  const params = useLocalSearchParams<{ id?: string }>();
+  // name/category can be passed in to pre-fill the form (e.g. from the popular services on Overview).
+  const params = useLocalSearchParams<{ id?: string; name?: string; category?: string }>();
   const { user } = useAuth();
   const { subscriptions, addSubscription, updateSubscription } = useSubscriptions();
   const editing = useMemo(() => subscriptions.find((item) => item.id === params.id), [params.id, subscriptions]);
-  const [name, setName] = useState(editing?.name ?? '');
+  const [name, setName] = useState(editing?.name ?? params.name ?? '');
   const [amount, setAmount] = useState(editing?.amount ? String(editing.amount) : '');
   const [cycle, setCycle] = useState<BillingCycle>(editing?.billingCycle ?? 'monthly');
   const [renewal, setRenewal] = useState(editing?.nextRenewal ?? new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10));
-  const [category, setCategory] = useState<Category>(editing?.category ?? 'entertainment');
+  const [category, setCategory] = useState<Category>(
+    editing?.category ?? (params.category && params.category in categoryLabels ? (params.category as Category) : 'entertainment'),
+  );
   const [reminder, setReminder] = useState(editing?.reminderEnabled ?? true);
   const [notes, setNotes] = useState(editing?.notes ?? '');
   const [reminderDays, setReminderDays] = useState(editing?.reminderDaysBefore ?? 3);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-  const currency = editing?.currency ?? user?.defaultCurrency ?? 'USD';
+  const [currency, setCurrency] = useState(editing?.currency ?? user?.defaultCurrency ?? 'USD');
+  const [currencyOpen, setCurrencyOpen] = useState(false);
 
   const save = async () => {
     const parsedAmount = Number.parseFloat(amount);
@@ -87,7 +92,6 @@ if (!editing && e?.status === 403) {
     >
       <View style={styles.titleRow}>
         <View>
-          <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>MANUAL ENTRY</Text>
           <Text style={[styles.title, { color: colors.foreground }]}>{editing ? 'Edit service' : 'Add a service'}</Text>
         </View>
         <Pressable onPress={() => router.back()} accessibilityLabel="Close" style={styles.closeButton}>
@@ -95,23 +99,30 @@ if (!editing && e?.status === 403) {
         </Pressable>
       </View>
 
+      <CurrencySheet visible={currencyOpen} value={currency} onSelect={setCurrency} onClose={() => setCurrencyOpen(false)} />
       <View style={styles.form}>
         <FieldLabel label="Service name" />
         <TextInput
           value={name}
           onChangeText={setName}
-          placeholder="e.g. Streamline"
+          placeholder="e.g. Netflix"
           placeholderTextColor={colors.mutedForeground}
           style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-          autoFocus={!editing}
+          autoFocus={!editing && !params.name}
           accessibilityLabel="Service name"
         />
 
         <FieldLabel label="How much?" />
         <View style={styles.amountRow}>
-          <View style={[styles.currencyBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+          <Pressable
+            onPress={() => setCurrencyOpen(true)}
+            accessibilityRole="button"
+            accessibilityLabel={`Currency ${currency}. Tap to change.`}
+            style={({ pressed }) => [styles.currencyBox, { backgroundColor: colors.secondary, borderColor: colors.border }, pressed && { opacity: 0.75 }]}
+          >
             <Text style={[styles.currencyText, { color: colors.secondaryForeground }]}>{currency}</Text>
-          </View>
+            <Feather name="chevron-down" size={14} color={colors.secondaryForeground} />
+          </Pressable>
           <TextInput
             value={amount}
             onChangeText={setAmount}
@@ -255,9 +266,9 @@ const styles = StyleSheet.create({
   fieldLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 13, marginTop: 9 },
   input: { minHeight: 52, borderRadius: 16, borderWidth: 1, paddingHorizontal: 15, fontFamily: 'Inter_400Regular', fontSize: 15 },
   amountRow: { flexDirection: 'row', gap: 8 },
-  currencyBox: { minHeight: 52, borderRadius: 16, borderWidth: 1, width: 74, alignItems: 'center', justifyContent: 'center' },
+  currencyBox: { minHeight: 52, borderRadius: 16, borderWidth: 1, width: 84, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 4 },
   currencyText: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
-  amountInput: { flex: 1, minHeight: 52, borderRadius: 16, borderWidth: 1, paddingHorizontal: 15, fontFamily: 'Inter_600SemiBold', fontSize: 18 },
+  amountInput: { flex: 1, minWidth: 0, minHeight: 52, borderRadius: 16, borderWidth: 1, paddingHorizontal: 15, fontFamily: 'Inter_600SemiBold', fontSize: 18 },
   optionGrid: { flexDirection: 'row', gap: 7 },
   cycleOption: { flex: 1, minHeight: 42, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   cycleText: { fontFamily: 'Inter_500Medium', fontSize: 11, textTransform: 'capitalize' },
