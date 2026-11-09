@@ -9,18 +9,17 @@ import {
   Inter_700Bold,
   useFonts,
 } from '@expo-google-fonts/inter';
-   import * as Notifications from 'expo-notifications';
    import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
-   import '@/lib/notifications'; // shows reminders while the app is open
+import { useLastReminderTap } from '@/lib/notifications'; // also shows reminders while the app is open
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
        const { status } = useAuth();
-     const lastNotification = Notifications.useLastNotificationResponse();
+     const lastNotification = useLastReminderTap();
      const openedNotification = useRef<string | null>(null);
 
      useEffect(() => {

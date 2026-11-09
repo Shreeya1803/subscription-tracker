@@ -1,15 +1,27 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Application from 'expo-application';
-import * as Notifications from 'expo-notifications';
+import type * as NotificationsModule from 'expo-notifications';
 import { Linking, Platform } from 'react-native';
 import { userApi } from '@/lib/api';
+
+/**
+ * expo-notifications is loaded only in real builds. Expo Go on Android does not include all of its
+ * native parts, so importing it there crashes every screen; reminders never work in Expo Go anyway.
+ */
+const inExpoGo = Constants.executionEnvironment === 'storeClient';
+const Notifications: typeof NotificationsModule | null =
+  inExpoGo || Platform.OS === 'web' ? null : (require('expo-notifications') as typeof NotificationsModule);
+
+/** The reminder the user tapped to open the app (always null in Expo Go and on web). */
+export const useLastReminderTap: () => NotificationsModule.NotificationResponse | null | undefined =
+  Notifications ? Notifications.useLastNotificationResponse : () => null;
 
 /** Android channel the server sends renewal reminders on (see the push_reminders migration). */
 export const REMINDER_CHANNEL = 'renewal-reminders';
 
 // Show reminders as a banner even when the app is open.
-Notifications.setNotificationHandler({
+Notifications?.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowBanner: true,
     shouldShowList: true,
@@ -22,11 +34,11 @@ export type ReminderPermission = 'granted' | 'denied' | 'undetermined' | 'unsupp
 
 /** Push only works on a real phone, in a real build (not Expo Go, not web, not the iOS simulator). */
 function pushSupported() {
-  return Platform.OS !== 'web' && Device.isDevice && Constants.executionEnvironment !== 'storeClient';
+  return Notifications !== null && Device.isDevice;
 }
 
 async function ensureChannel() {
-  if (Platform.OS !== 'android') return;
+  if (Platform.OS !== 'android' || !Notifications) return;
   // Android 13+: the channel must exist before asking, or the system prompt is not shown.
   await Notifications.setNotificationChannelAsync(REMINDER_CHANNEL, {
     name: 'Renewal reminders',
@@ -36,7 +48,7 @@ async function ensureChannel() {
 }
 
 export async function getReminderPermission(): Promise<ReminderPermission> {
-  if (!pushSupported()) return 'unsupported';
+  if (!Notifications || !pushSupported()) return 'unsupported';
   const { status } = await Notifications.getPermissionsAsync();
   return status as ReminderPermission;
 }
@@ -47,7 +59,7 @@ export async function getReminderPermission(): Promise<ReminderPermission> {
  * `ask: false` only refreshes the token when permission was already given (used at sign-in).
  */
 export async function registerForReminders({ ask }: { ask: boolean }): Promise<ReminderPermission> {
-  if (!pushSupported()) return 'unsupported';
+  if (!Notifications || !pushSupported()) return 'unsupported';
   await ensureChannel();
 
   let { status, canAskAgain } = await Notifications.getPermissionsAsync();
@@ -64,7 +76,7 @@ export async function registerForReminders({ ask }: { ask: boolean }): Promise<R
 
 /** Stops reminders on this phone for the signed-in account (called before signing out). */
 export async function unregisterFromReminders() {
-  if (!pushSupported()) return;
+  if (!Notifications || !pushSupported()) return;
   try {
     await userApi.clearPushToken();
   } catch {
