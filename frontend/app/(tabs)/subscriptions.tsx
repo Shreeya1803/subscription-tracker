@@ -5,7 +5,8 @@ import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-n
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useAddSubscription } from '@/hooks/useAddSubscription';
-import { Category, getDaysUntil, useSubscriptions } from '@/context/SubscriptionContext';
+import { Category, formatMoney, getDaysUntil, useSubscriptions } from '@/context/SubscriptionContext';
+import { useAuth } from '@/context/AuthContext';
 import {
   EmptyState,
   FilterChip,
@@ -20,7 +21,8 @@ type SortMode = 'renewal' | 'cost' | 'name';
 export default function SubscriptionsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { subscriptions, hydrated } = useSubscriptions();
+  const { subscriptions, hydrated, summary, monthlyEquivalent } = useSubscriptions();
+  const { user } = useAuth();
   const { openAdd } = useAddSubscription();
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<Category | 'all'>('all');
@@ -39,13 +41,21 @@ export default function SubscriptionsScreen() {
     });
   }, [category, query, sort, subscriptions]);
 
+  const active = subscriptions.filter((item) => item.status === 'active');
+  const monthly = summary?.monthlyTotal ?? active.reduce((sum, item) => sum + monthlyEquivalent(item), 0);
+
   if (!hydrated) return <View style={[styles.container, { backgroundColor: colors.background }]} />;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 16 }]}>
       <View style={styles.header}>
-        <View>
-          <Text style={[styles.title, { color: colors.foreground }]}>Subscriptions</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={1}>Subscriptions</Text>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]} numberOfLines={1}>
+            {active.length === 0
+              ? 'Nothing tracked yet'
+              : `${active.length} active, ${formatMoney(monthly, user?.defaultCurrency ?? 'USD')} a month`}
+          </Text>
         </View>
         <IconButton icon="plus" tone="primary" label="Add subscription" onPress={openAdd} />
       </View>
@@ -63,17 +73,27 @@ export default function SubscriptionsScreen() {
           ))}
         </ScrollView>
         <View style={styles.sortRow}>
-          <Text style={[styles.resultCount, { color: colors.mutedForeground }]}>
+          <Text style={[styles.resultCount, { color: colors.mutedForeground }]} numberOfLines={1}>
             {visibleSubscriptions.length} {visibleSubscriptions.length === 1 ? 'service' : 'services'}
           </Text>
-          <View style={styles.sortOptions}>
-            {(['renewal', 'cost', 'name'] as SortMode[]).map((item) => (
-              <Pressable key={item} onPress={() => setSort(item)} accessibilityRole="button">
-                <Text style={[styles.sortText, { color: sort === item ? colors.accentForeground : colors.mutedForeground }]}>
-                  {item === 'renewal' ? 'Next up' : item === 'cost' ? 'Cost' : 'A–Z'}
-                </Text>
-              </Pressable>
-            ))}
+          <View style={[styles.segment, { backgroundColor: colors.muted }]} accessibilityRole="tablist">
+            {(['renewal', 'cost', 'name'] as SortMode[]).map((item) => {
+              const on = sort === item;
+              return (
+                <Pressable
+                  key={item}
+                  onPress={() => setSort(item)}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={`Sort by ${item === 'renewal' ? 'next renewal' : item === 'cost' ? 'cost' : 'name'}`}
+                  style={[styles.segmentItem, on && { backgroundColor: colors.card }]}
+                >
+                  <Text style={[styles.sortText, { color: on ? colors.foreground : colors.mutedForeground }]} numberOfLines={1}>
+                    {item === 'renewal' ? 'Next up' : item === 'cost' ? 'Cost' : 'A–Z'}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
       </View>
@@ -104,14 +124,15 @@ export default function SubscriptionsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingHorizontal: 20, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 18 },
-  eyebrow: { fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 1.2, marginBottom: 4 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 30, letterSpacing: -0.6 },
+  header: { paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 },
+  title: { fontFamily: 'Inter_700Bold', fontSize: 28, letterSpacing: -0.6 },
+  subtitle: { fontFamily: 'Inter_400Regular', fontSize: 13, marginTop: 2 },
   searchWrap: { paddingHorizontal: 20 },
-  filterRow: { gap: 8, paddingVertical: 12 },
-  sortRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 2, paddingBottom: 8 },
-  resultCount: { fontFamily: 'Inter_500Medium', fontSize: 12 },
-  sortOptions: { flexDirection: 'row', gap: 13 },
+  filterRow: { gap: 8, paddingVertical: 10 },
+  sortRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, paddingBottom: 8 },
+  resultCount: { flexShrink: 1, fontFamily: 'Inter_500Medium', fontSize: 12 },
+  segment: { flexDirection: 'row', borderRadius: 12, padding: 3, gap: 2 },
+  segmentItem: { paddingHorizontal: 11, paddingVertical: 6, borderRadius: 9 },
   sortText: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
   listContent: { paddingHorizontal: 20, paddingTop: 6, flexGrow: 1 },
   emptyAction: { paddingHorizontal: 16, paddingVertical: 12, borderRadius: 15, marginTop: 7 },

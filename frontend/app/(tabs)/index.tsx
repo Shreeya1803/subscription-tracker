@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { AppMark, IconButton, categoryIcons, categoryLabels } from '@/components/SubscriptionUI';
+import { AppMark, IconButton, categoryColor, categoryLabels } from '@/components/SubscriptionUI';
 import { useAuth } from '@/context/AuthContext';
 import { Category, formatMoney, getDaysUntil, Subscription, useSubscriptions } from '@/context/SubscriptionContext';
 import { useAddSubscription } from '@/hooks/useAddSubscription';
@@ -160,14 +160,14 @@ function SpendCard({
     <View style={[styles.spendCard, { backgroundColor: brand.ink }]}>
       <View style={[styles.glow, { borderColor: brand.inkLine }]} />
       <View style={styles.spendTop}>
-        <Text style={[styles.spendLabel, { color: brand.mist }]}>You pay each month</Text>
+        <Text style={[styles.spendLabel, { color: brand.mist }]} numberOfLines={1}>You pay each month</Text>
         <View style={[styles.privatePill, { backgroundColor: 'rgba(255,255,255,0.08)' }]}>
           <Feather name="lock" size={11} color={brand.mist} />
           <Text style={[styles.privateText, { color: brand.mist }]}>Only you</Text>
         </View>
       </View>
       <Text style={[styles.spendAmount, { color: brand.white }]} adjustsFontSizeToFit numberOfLines={1}>{monthly}</Text>
-      <Text style={[styles.spendSub, { color: brand.mist }]}>
+      <Text style={[styles.spendSub, { color: brand.mist }]} numberOfLines={2}>
         {annual} a year across {activeCount} {activeCount === 1 ? 'service' : 'services'}
         {mixed ? ' (mixed currencies)' : ''}
       </Text>
@@ -242,7 +242,9 @@ function QuickAction({
       >
         <Feather name={icon} size={20} color={primary ? colors.brand.ink : colors.foreground} />
       </View>
-      <Text style={[styles.actionLabel, { color: colors.foreground }]}>{label}</Text>
+      <Text style={[styles.actionLabel, { color: colors.foreground }]} numberOfLines={1} adjustsFontSizeToFit>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -263,38 +265,29 @@ function UpcomingRow({ item, colors, divider }: { item: Subscription; colors: Co
       </View>
       <View style={{ flex: 1, gap: 3 }}>
         <Text style={[styles.upName, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
-        <Text style={[styles.upMeta, { color: soon ? colors.warning : colors.mutedForeground }]}>
+        <Text style={[styles.upMeta, { color: soon ? colors.warning : colors.mutedForeground }]} numberOfLines={1}>
           {days === 0 ? 'Renews today' : days === 1 ? 'Renews tomorrow' : `Renews in ${days} days`}
         </Text>
       </View>
-      <Text style={[styles.upAmount, { color: colors.foreground }]}>{formatMoney(item.amount, item.currency)}</Text>
+      <Text style={[styles.upAmount, { color: colors.foreground }]} numberOfLines={1}>{formatMoney(item.amount, item.currency)}</Text>
     </Pressable>
   );
 }
 
-const MIX_COLORS = (c: Colors): Record<Category, string> => ({
-  entertainment: c.brand.gold,
-  utilities: '#5B8DEF',
-  work: c.isDark ? '#C9D3EA' : c.brand.ink,
-  health: c.brand.green,
-  other: '#9AA3B5',
-});
-
 /** One bar split by category, so the spending mix fits in a single line. */
 function SpendMix({ colors, categories, total }: { colors: Colors; categories: Array<{ category: Category; amount: number }>; total: number }) {
-  const palette = MIX_COLORS(colors);
   return (
     <Pressable onPress={() => router.push('/(tabs)/subscriptions')} accessibilityRole="button" accessibilityLabel="Spending by category">
       <Text style={[styles.sectionTitle, { color: colors.foreground, marginBottom: 10 }]}>Where it goes</Text>
       <View style={[styles.mixBar, { backgroundColor: colors.muted }]}>
         {categories.map(({ category, amount }) => (
-          <View key={category} style={{ flex: amount / total, backgroundColor: palette[category] }} />
+          <View key={category} style={{ flex: amount / total, backgroundColor: categoryColor(colors, category) }} />
         ))}
       </View>
       <View style={styles.legend}>
         {categories.map(({ category, amount }) => (
           <View key={category} style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: palette[category] }]} />
+            <View style={[styles.legendDot, { backgroundColor: categoryColor(colors, category) }]} />
             <Text style={[styles.legendText, { color: colors.mutedForeground }]}>
               {categoryLabels[category]} {Math.round((amount / total) * 100)}%
             </Text>
@@ -352,7 +345,7 @@ const styles = StyleSheet.create({
   spendCard: { borderRadius: 26, padding: 20, paddingBottom: 16, overflow: 'hidden' },
   glow: { position: 'absolute', width: 260, height: 260, borderRadius: 130, right: -120, top: -150, borderWidth: 36 },
   spendTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  spendLabel: { fontFamily: 'Inter_500Medium', fontSize: 13 },
+  spendLabel: { flexShrink: 1, fontFamily: 'Inter_500Medium', fontSize: 13 },
   privatePill: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 9, paddingVertical: 4, borderRadius: 12 },
   privateText: { fontFamily: 'Inter_500Medium', fontSize: 11 },
   spendAmount: { fontFamily: 'Inter_700Bold', fontSize: 38, letterSpacing: -1.2, marginTop: 6, fontVariant: ['tabular-nums'] },
@@ -371,7 +364,7 @@ const styles = StyleSheet.create({
   banner: { borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 9 },
   bannerText: { fontFamily: 'Inter_500Medium', fontSize: 12, flex: 1, lineHeight: 17 },
   actions: { flexDirection: 'row', justifyContent: 'space-between' },
-  action: { alignItems: 'center', gap: 6, flex: 1 },
+  action: { alignItems: 'center', gap: 6, flex: 1, paddingHorizontal: 2 },
   actionIcon: { width: 54, height: 54, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   actionLabel: { fontFamily: 'Inter_500Medium', fontSize: 12 },
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },

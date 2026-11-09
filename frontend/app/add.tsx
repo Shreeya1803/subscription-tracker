@@ -127,7 +127,7 @@ if (!editing && e?.status === 403) {
             accessibilityLabel={`Currency ${currency}. Tap to change.`}
             style={({ pressed }) => [styles.currencyBox, { backgroundColor: colors.secondary, borderColor: colors.border }, pressed && { opacity: 0.75 }]}
           >
-            <Text style={[styles.currencyText, { color: colors.secondaryForeground }]}>{currency}</Text>
+            <Text style={[styles.currencyText, { color: colors.secondaryForeground }]} numberOfLines={1}>{currency}</Text>
             <Feather name="chevron-down" size={14} color={colors.secondaryForeground} />
           </Pressable>
           <TextInput
@@ -202,7 +202,7 @@ if (!editing && e?.status === 403) {
             <Feather name="bell" size={16} color={reminder ? colors.primaryForeground : colors.mutedForeground} />
           </View>
           <View style={styles.reminderCopy}>
-            <Text style={[styles.reminderTitle, { color: colors.foreground }]}>Remind me before renewal</Text>
+            <Text style={[styles.reminderTitle, { color: colors.foreground }]} numberOfLines={2}>Remind me before renewal</Text>
             <Text style={[styles.reminderSubtext, { color: colors.mutedForeground }]}>{reminder ? `${reminderDays} day${reminderDays === 1 ? '' : 's'} before` : 'Off'}</Text>
           </View>
           <View style={[styles.toggle, { backgroundColor: reminder ? colors.warning : colors.muted }]}>
@@ -269,7 +269,9 @@ function OptionButton({
       onPress={onPress}
       style={[styles.cycleOption, { backgroundColor: selected ? colors.primary : colors.card, borderColor: selected ? colors.primary : colors.border }]}
     >
-      <Text style={[styles.cycleText, { color: selected ? colors.primaryForeground : colors.mutedForeground }]}>{label}</Text>
+      <Text style={[styles.cycleText, { color: selected ? colors.primaryForeground : colors.mutedForeground }]} numberOfLines={1} adjustsFontSizeToFit>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -289,7 +291,7 @@ const styles = StyleSheet.create({
   currencyText: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
   amountInput: { flex: 1, minWidth: 0, minHeight: 52, borderRadius: 16, borderWidth: 1, paddingHorizontal: 15, fontFamily: 'Inter_600SemiBold', fontSize: 18 },
   optionGrid: { flexDirection: 'row', gap: 7 },
-  cycleOption: { flex: 1, minHeight: 42, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  cycleOption: { flex: 1, minHeight: 42, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
   cycleText: { fontFamily: 'Inter_500Medium', fontSize: 11, textTransform: 'capitalize' },
   dateInputWrap: { minHeight: 52, borderRadius: 16, borderWidth: 1, paddingHorizontal: 15, flexDirection: 'row', alignItems: 'center', gap: 10 },
   dateText: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 15 },

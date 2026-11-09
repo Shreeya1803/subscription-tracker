@@ -90,9 +90,9 @@ export default function SubscriptionDetailScreen() {
         <View style={[styles.detailIcon, { backgroundColor: colors.navySoft }]}>
           <Feather name={categoryIcons[subscription.category]} size={28} color={colors.primary} />
         </View>
-        <Text style={[styles.detailName, { color: colors.foreground }]}>{subscription.name}</Text>
+        <Text style={[styles.detailName, { color: colors.foreground }]} numberOfLines={2}>{subscription.name}</Text>
         <Text style={[styles.detailCategory, { color: colors.mutedForeground }]}>{categoryLabels[subscription.category]}</Text>
-        <Text style={[styles.detailAmount, { color: colors.foreground }]}>{formatMoney(subscription.amount, subscription.currency)}</Text>
+        <Text style={[styles.detailAmount, { color: colors.foreground }]} numberOfLines={1} adjustsFontSizeToFit>{formatMoney(subscription.amount, subscription.currency)}</Text>
         <Text style={[styles.detailCycle, { color: colors.mutedForeground }]}>{subscription.billingCycle === 'custom' ? `every ${subscription.customCycleDays ?? '?'} days` : `per ${subscription.billingCycle.replace('ly', '')}`}</Text>
       </View>
 
@@ -101,10 +101,10 @@ export default function SubscriptionDetailScreen() {
           <Feather name="calendar" size={17} color={colors.primaryForeground} />
         </View>
         <View style={styles.renewalCopy}>
-          <Text style={[styles.renewalTitle, { color: colors.foreground }]}>
+          <Text style={[styles.renewalTitle, { color: colors.foreground }]} numberOfLines={2}>
             {days === 0 ? 'Renews today' : days === 1 ? 'Renews tomorrow' : days > 0 ? `Renews in ${days} days` : 'Renewal date passed'}
           </Text>
-          <Text style={[styles.renewalText, { color: colors.mutedForeground }]}>{formatRenewal(subscription.nextRenewal)} · {subscription.reminderEnabled ? 'Reminder on' : 'Reminder off'}</Text>
+          <Text style={[styles.renewalText, { color: colors.mutedForeground }]} numberOfLines={2}>{formatRenewal(subscription.nextRenewal)} · {subscription.reminderEnabled ? 'Reminder on' : 'Reminder off'}</Text>
         </View>
       </View>
 
@@ -115,7 +115,7 @@ export default function SubscriptionDetailScreen() {
 
       {subscription.notes ? (
         <View style={[styles.notesCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Text style={[styles.notesLabel, { color: colors.mutedForeground }]}>NOTES</Text>
+          <Text style={[styles.notesLabel, { color: colors.mutedForeground }]}>Notes</Text>
           <Text style={[styles.notesText, { color: colors.foreground }]}>{subscription.notes}</Text>
         </View>
       ) : null}
@@ -125,7 +125,7 @@ export default function SubscriptionDetailScreen() {
         {subscription.status === 'active' ? (
           <Pressable onPress={cancel} style={({ pressed }) => [styles.secondaryAction, { borderColor: colors.border }, pressed && { opacity: 0.7 }]}>
             <Feather name="slash" size={17} color={colors.mutedForeground} />
-            <Text style={[styles.secondaryActionText, { color: colors.foreground }]}>Mark as canceled</Text>
+            <Text style={[styles.secondaryActionText, { color: colors.foreground }]} numberOfLines={1}>Mark as cancelled</Text>
           </Pressable>
         ) : null}
         <Pressable onPress={remove} style={({ pressed }) => [styles.deleteAction, pressed && { opacity: 0.7 }]}>
@@ -140,8 +140,8 @@ export default function SubscriptionDetailScreen() {
 function InfoCell({ label, value, colors }: { label: string; value: string; colors: ReturnType<typeof useColors> }) {
   return (
     <View style={[styles.infoCell, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Text style={[styles.infoLabel, { color: colors.mutedForeground }]}>{label}</Text>
-      <Text style={[styles.infoValue, { color: colors.foreground }]}>{value}</Text>
+      <Text style={[styles.infoLabel, { color: colors.mutedForeground }]} numberOfLines={2}>{label}</Text>
+      <Text style={[styles.infoValue, { color: colors.foreground }]} numberOfLines={1} adjustsFontSizeToFit>{value}</Text>
     </View>
   );
 }
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   topBarTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 15 },
   detailHero: { marginHorizontal: 20, marginTop: 18, borderRadius: 25, borderWidth: 1, alignItems: 'center', padding: 24 },
   detailIcon: { width: 64, height: 64, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  detailName: { fontFamily: 'Inter_700Bold', fontSize: 24, letterSpacing: -0.5 },
+  detailName: { fontFamily: 'Inter_700Bold', fontSize: 24, letterSpacing: -0.5, textAlign: 'center' },
   detailCategory: { fontFamily: 'Inter_400Regular', fontSize: 13, marginTop: 5 },
   detailAmount: { fontFamily: 'Inter_700Bold', fontSize: 34, marginTop: 20, letterSpacing: -0.7 },
   detailCycle: { fontFamily: 'Inter_400Regular', fontSize: 12, marginTop: 2 },
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
   infoLabel: { fontFamily: 'Inter_500Medium', fontSize: 11 },
   infoValue: { fontFamily: 'Inter_600SemiBold', fontSize: 17 },
   notesCard: { marginHorizontal: 20, marginTop: 14, borderRadius: 18, borderWidth: 1, padding: 15, gap: 8 },
-  notesLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 10, letterSpacing: 1.2 },
+  notesLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
   notesText: { fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 20 },
   actions: { marginHorizontal: 20, marginTop: 28, gap: 11 },
   secondaryAction: { minHeight: 53, borderRadius: 18, borderWidth: 1, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 8 },

@@ -159,8 +159,8 @@ export default function SettingsScreen() {
           <Text style={[styles.profileInitial, { color: colors.accentForeground }]}>{(user?.displayName?.[0] ?? 'Y').toUpperCase()}</Text>
         </View>
         <View style={styles.profileCopy}>
-          <Text style={[styles.profileName, { color: colors.primaryForeground }]}>{user?.displayName ?? 'Your account'}</Text>
-          <Text style={[styles.profileMeta, { color: colors.navySoft }]}>{planLabel} · {active.length} active services</Text>
+          <Text style={[styles.profileName, { color: colors.primaryForeground }]} numberOfLines={1}>{user?.displayName ?? 'Your account'}</Text>
+          <Text style={[styles.profileMeta, { color: colors.navySoft }]} numberOfLines={2}>{planLabel} · {active.length} active services</Text>
         </View>
         </View>
 

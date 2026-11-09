@@ -34,6 +34,28 @@ export const categoryIcons: Record<Category, keyof typeof Feather.glyphMap> = {
   other: 'grid',
 };
 
+/** One colour per category, used for icons, the spending bar and its legend. */
+export function categoryColor(colors: ReturnType<typeof useColors>, category: Category) {
+  const map: Record<Category, string> = {
+    entertainment: colors.brand.gold,
+    utilities: '#5B8DEF',
+    work: colors.isDark ? '#C9D3EA' : colors.brand.ink,
+    health: colors.brand.green,
+    other: '#9AA3B5',
+  };
+  return map[category];
+}
+
+/** Short renewal label that always fits: "Today", "Tomorrow", "In 3 days" or "14 Nov". */
+export function renewalLabel(nextRenewal: string) {
+  const days = getDaysUntil(nextRenewal);
+  if (days < 0) return 'Past due';
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Tomorrow';
+  if (days <= 7) return `In ${days} days`;
+  return formatRenewal(nextRenewal);
+}
+
 export function AppMark({ size = 42 }: { size?: number }) {
   const colors = useColors();
   return (
@@ -114,12 +136,15 @@ export function SubscriptionRow({
   const colors = useColors();
   const days = getDaysUntil(subscription.nextRenewal);
   const icon = categoryIcons[subscription.category];
+  const tint = categoryColor(colors, subscription.category);
   const isSoon = days >= 0 && days <= 7;
+  const cycle = subscription.billingCycle === 'custom' ? `Every ${subscription.customCycleDays ?? '?'} days` : subscription.billingCycle;
   return (
     <Pressable
       onPress={onPress}
       testID={`subscription-row-${subscription.id}`}
       accessibilityRole="button"
+      accessibilityLabel={`${subscription.name}, ${formatMoney(subscription.amount, subscription.currency)} ${cycle}, renews ${renewalLabel(subscription.nextRenewal)}`}
       style={({ pressed }) => [
         styles.subscriptionRow,
         { backgroundColor: colors.card, borderColor: colors.border },
@@ -127,30 +152,28 @@ export function SubscriptionRow({
         pressed && styles.pressed,
       ]}
     >
-      <View style={[styles.serviceIcon, { backgroundColor: colors.navySoft }]}>
-        <Feather name={icon} size={20} color={colors.primary} />
+      <View style={[styles.serviceIcon, { backgroundColor: `${tint}22` }]}>
+        <Feather name={icon} size={19} color={tint} />
       </View>
-      <View style={styles.subscriptionInfo}>
-        <View style={styles.rowTopLine}>
-          <Text numberOfLines={1} style={[styles.subscriptionName, { color: colors.foreground }]}>
-            {subscription.name}
-          </Text>
-          <Text style={[styles.subscriptionAmount, { color: colors.foreground }]}>
-            {formatMoney(subscription.amount, subscription.currency)}
-          </Text>
-        </View>
-        <View style={styles.rowBottomLine}>
-          <Text style={[styles.subscriptionMeta, { color: colors.mutedForeground }]}>
-            {categoryLabels[subscription.category]} · {subscription.billingCycle}
-          </Text>
-          {!compact ? (
-            <Text style={[styles.subscriptionMeta, { color: isSoon ? colors.warning : colors.mutedForeground }]}>
-              {days < 0 ? 'Past due' : days === 0 ? 'Renews today' : `Renews ${formatRenewal(subscription.nextRenewal)}`}
-            </Text>
-          ) : null}
-        </View>
+      {/* Left side shrinks (and truncates) first, so the amount and date never leave the card. */}
+      <View style={styles.rowLeft}>
+        <Text numberOfLines={1} style={[styles.subscriptionName, { color: colors.foreground }]}>
+          {subscription.name}
+        </Text>
+        <Text numberOfLines={1} style={[styles.subscriptionMeta, { color: colors.mutedForeground }]}>
+          <Text style={styles.capitalize}>{cycle}</Text> · {categoryLabels[subscription.category]}
+        </Text>
       </View>
-      {!compact ? <Feather name="chevron-right" size={18} color={colors.mutedForeground} /> : null}
+      <View style={styles.rowRight}>
+        <Text numberOfLines={1} style={[styles.subscriptionAmount, { color: colors.foreground }]}>
+          {formatMoney(subscription.amount, subscription.currency)}
+        </Text>
+        {!compact ? (
+          <Text numberOfLines={1} style={[styles.subscriptionMeta, { color: isSoon || days < 0 ? colors.warning : colors.mutedForeground }]}>
+            {renewalLabel(subscription.nextRenewal)}
+          </Text>
+        ) : null}
+      </View>
     </Pressable>
   );
 }
@@ -289,15 +312,15 @@ const styles = StyleSheet.create({
   sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   sectionTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 18 },
   sectionAction: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
-  subscriptionRow: { minHeight: 76, borderWidth: 1, borderRadius: 20, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
+  subscriptionRow: { minHeight: 68, borderWidth: 1, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 12, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
   compactRow: { borderWidth: 0, borderRadius: 0, paddingHorizontal: 0, marginBottom: 2 },
-  serviceIcon: { width: 44, height: 44, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  subscriptionInfo: { flex: 1, gap: 7 },
-  rowTopLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  rowBottomLine: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  subscriptionName: { fontFamily: 'Inter_600SemiBold', fontSize: 15, flex: 1 },
-  subscriptionAmount: { fontFamily: 'Inter_600SemiBold', fontSize: 15 },
-  subscriptionMeta: { fontFamily: 'Inter_400Regular', fontSize: 12, textTransform: 'capitalize' },
+  serviceIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  rowLeft: { flex: 1, minWidth: 0, gap: 4 },
+  rowRight: { flexShrink: 0, maxWidth: '46%', alignItems: 'flex-end', gap: 4 },
+  subscriptionName: { fontFamily: 'Inter_600SemiBold', fontSize: 15 },
+  subscriptionAmount: { fontFamily: 'Inter_600SemiBold', fontSize: 15, fontVariant: ['tabular-nums'] },
+  subscriptionMeta: { fontFamily: 'Inter_400Regular', fontSize: 12 },
+  capitalize: { textTransform: 'capitalize' },
   searchField: { minHeight: 50, paddingHorizontal: 15, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
   searchInput: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 15, paddingVertical: 12 },
   filterChip: { paddingHorizontal: 14, paddingVertical: 9, borderRadius: 20, borderWidth: 1 },
