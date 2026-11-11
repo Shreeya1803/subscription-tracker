@@ -34,7 +34,7 @@ export default function ForgotPasswordScreen() {
   };
 
   const reset = async () => {
-    if (!/^\d{6}$/.test(code.trim())) return setError('Enter the 6-digit code from the email.');
+    if (!/^\d{6,10}$/.test(code.trim())) return setError('Enter the code from the email (numbers only).');
     if (password.length < 8) return setError('Password must be at least 8 characters.');
     if (password !== confirm) return setError("The two passwords don't match.");
     setBusy(true);
@@ -52,14 +52,14 @@ export default function ForgotPasswordScreen() {
     return (
       <AuthShell
         title="Enter your code"
-        subtitle={`If an account exists for ${email.trim()}, we've sent a 6-digit code. It expires after 1 hour.`}
+        subtitle={`If an account exists for ${email.trim()}, we've sent a code. It expires after 1 hour.`}
       >
         <AuthField
           label="Code"
           value={code}
           onChangeText={(v) => setCode(v.replace(/\D/g, ''))}
           keyboardType="number-pad"
-          maxLength={6}
+          maxLength={10}
           autoComplete="one-time-code"
           textContentType="oneTimeCode"
         />

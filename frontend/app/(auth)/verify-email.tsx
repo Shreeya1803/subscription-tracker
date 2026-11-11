@@ -27,7 +27,7 @@ export default function VerifyEmailScreen() {
   }, [wait]);
 
   const submit = async () => {
-    if (!/^\d{6}$/.test(code.trim())) return setError('Enter the 6-digit code from the email.');
+    if (!/^\d{6,10}$/.test(code.trim())) return setError('Enter the code from the email (numbers only).');
     setBusy(true);
     setError('');
     setInfo('');
@@ -53,13 +53,13 @@ export default function VerifyEmailScreen() {
   };
 
   return (
-    <AuthShell title="Check your email" subtitle={`We sent a 6-digit code to ${email}. Enter it below to confirm your email.`}>
+    <AuthShell title="Check your email" subtitle={`We sent a code to ${email}. Enter it below to confirm your email.`}>
       <AuthField
         label="Code"
         value={code}
         onChangeText={(v) => setCode(v.replace(/\D/g, ''))}
         keyboardType="number-pad"
-        maxLength={6}
+        maxLength={10}
         autoComplete="one-time-code"
         textContentType="oneTimeCode"
         autoFocus

@@ -1,4 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
+import * as Application from 'expo-application';
 import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -12,6 +14,7 @@ import { getReminderPermission, openNotificationSettings, registerForReminders, 
 import { formatMoney, useSubscriptions } from '@/context/SubscriptionContext';
 import { AppMark, SectionHeading } from '@/components/SubscriptionUI';
 import { APP_NAME } from '@/lib/brand';
+import { tourDoneKey } from '@/components/AppTour';
 
 function SettingsRow({
   icon,
@@ -173,6 +176,16 @@ export default function SettingsScreen() {
                subtitle={reminderSubtitle[reminderPermission]}
                onPress={() => void onRemindersPress()}
           />
+          <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
+          <SettingsRow
+            icon="compass"
+            title="App tour"
+            subtitle="See what each part of the dashboard does"
+            onPress={() => {
+              // Clear the "seen" flag; the Overview starts the tour when it opens.
+              if (user) void AsyncStorage.removeItem(tourDoneKey(user.id)).finally(() => router.navigate('/(tabs)'));
+            }}
+          />
         </View>
       </View>
 
@@ -212,7 +225,9 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      <Text style={[styles.versionText, { color: colors.mutedForeground }]}>{APP_NAME} · Version 1.0</Text>
+      <Text style={[styles.versionText, { color: colors.mutedForeground }]}>{APP_NAME} · Version {Application.nativeApplicationVersion ?? '1.0.0'}
+        {Application.nativeBuildVersion ? ` (${Application.nativeBuildVersion})` : ''}
+      </Text>
     </ScrollView>
   );
 }

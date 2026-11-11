@@ -18,6 +18,7 @@
     "@types/react": "~19.2.2",
     "babel-plugin-react-compiler": "^19.0.0-beta-e993439-20250117",
     "expo": "~57.0.7",
+    "expo-application": "~57.0.3",
     "expo-blur": "~57.0.2",
     "expo-constants": "~57.0.6",
     "expo-device": "~57.0.2",

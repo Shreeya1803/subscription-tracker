@@ -11,6 +11,7 @@ import {
 } from '@expo-google-fonts/inter';
    import { router, Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { BrandSplash } from '@/components/BrandSplash';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import { useLastReminderTap } from '@/lib/notifications'; // also shows reminders while the app is open
@@ -22,9 +23,6 @@ function RootLayoutNav() {
      const lastNotification = useLastReminderTap();
      const openedNotification = useRef<string | null>(null);
 
-     useEffect(() => {
-       if (status !== 'loading') SplashScreen.hideAsync();
-     }, [status]);
 
      // Tapping a renewal reminder opens that subscription (once signed in).
      useEffect(() => {
@@ -38,10 +36,11 @@ function RootLayoutNav() {
        }
      }, [lastNotification, status]);
 
-  if (status === 'loading') return null;
   const signedIn = status === 'signedIn';
   const signedOut = status === 'signedOut';
   return (
+    <>
+    {status === 'loading' ? null : (
     <Stack screenOptions={{ headerBackTitle: 'Back' }}>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -71,6 +70,10 @@ function RootLayoutNav() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack.Protected>
     </Stack>
+    )}
+    {/* Branded splash on top until the first screen is ready (then it fades out and removes itself). */}
+    <BrandSplash ready={status !== 'loading'} />
+    </>
   );
 }
 

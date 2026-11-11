@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import React from 'react';
+import { Image } from 'expo-image';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -10,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
+import { serviceLogoUrl, tileColor } from '@/lib/serviceLogos';
 import {
   Category,
   formatMoney,
@@ -54,6 +56,33 @@ export function renewalLabel(nextRenewal: string) {
   if (days === 1) return 'Tomorrow';
   if (days <= 7) return `In ${days} days`;
   return formatRenewal(nextRenewal);
+}
+
+/** The service's own icon when we know it (Netflix, Spotify…), otherwise a coloured letter tile. */
+export function ServiceLogo({ name, size = 42 }: { name: string; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  const url = serviceLogoUrl(name);
+  const radius = Math.round(size * 0.3);
+  if (url && !failed) {
+    return (
+      <View style={[styles.logoWrap, { width: size, height: size, borderRadius: radius }]}>
+        <Image
+          source={{ uri: url }}
+          style={{ width: size * 0.62, height: size * 0.62 }}
+          contentFit="contain"
+          cachePolicy="disk"
+          transition={150}
+          onError={() => setFailed(true)}
+          accessibilityIgnoresInvertColors
+        />
+      </View>
+    );
+  }
+  return (
+    <View style={[styles.logoWrap, { width: size, height: size, borderRadius: radius, backgroundColor: tileColor(name) }]}>
+      <Text style={[styles.logoLetter, { fontSize: size * 0.42 }]}>{(name.trim()[0] ?? '?').toUpperCase()}</Text>
+    </View>
+  );
 }
 
 export function AppMark({ size = 42 }: { size?: number }) {
@@ -135,8 +164,6 @@ export function SubscriptionRow({
 }) {
   const colors = useColors();
   const days = getDaysUntil(subscription.nextRenewal);
-  const icon = categoryIcons[subscription.category];
-  const tint = categoryColor(colors, subscription.category);
   const isSoon = days >= 0 && days <= 7;
   const cycle = subscription.billingCycle === 'custom' ? `Every ${subscription.customCycleDays ?? '?'} days` : subscription.billingCycle;
   return (
@@ -152,9 +179,7 @@ export function SubscriptionRow({
         pressed && styles.pressed,
       ]}
     >
-      <View style={[styles.serviceIcon, { backgroundColor: `${tint}22` }]}>
-        <Feather name={icon} size={19} color={tint} />
-      </View>
+      <ServiceLogo name={subscription.name} size={42} />
       {/* Left side shrinks (and truncates) first, so the amount and date never leave the card. */}
       <View style={styles.rowLeft}>
         <Text numberOfLines={1} style={[styles.subscriptionName, { color: colors.foreground }]}>
@@ -305,6 +330,8 @@ export function LoadingState() {
 }
 
 const styles = StyleSheet.create({
+  logoWrap: { backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  logoLetter: { color: '#FFFFFF', fontFamily: 'Inter_700Bold' },
   mark: { alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 0 },
   markRing: { position: 'absolute', borderWidth: 3 },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },

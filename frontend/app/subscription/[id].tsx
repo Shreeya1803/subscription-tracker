@@ -6,7 +6,7 @@ import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { formatMoney, formatRenewal, getDaysUntil, useSubscriptions } from '@/context/SubscriptionContext';
-import { categoryIcons, categoryLabels, PrimaryButton } from '@/components/SubscriptionUI';
+import { categoryLabels, PrimaryButton, ServiceLogo } from '@/components/SubscriptionUI';
 
 export default function SubscriptionDetailScreen() {
   const colors = useColors();
@@ -87,8 +87,8 @@ export default function SubscriptionDetailScreen() {
       </View>
 
       <View style={[styles.detailHero, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={[styles.detailIcon, { backgroundColor: colors.navySoft }]}>
-          <Feather name={categoryIcons[subscription.category]} size={28} color={colors.primary} />
+        <View style={styles.detailIcon}>
+          <ServiceLogo name={subscription.name} size={64} />
         </View>
         <Text style={[styles.detailName, { color: colors.foreground }]} numberOfLines={2}>{subscription.name}</Text>
         <Text style={[styles.detailCategory, { color: colors.mutedForeground }]}>{categoryLabels[subscription.category]}</Text>
@@ -152,7 +152,7 @@ const styles = StyleSheet.create({
   backButton: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   topBarTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 15 },
   detailHero: { marginHorizontal: 20, marginTop: 18, borderRadius: 25, borderWidth: 1, alignItems: 'center', padding: 24 },
-  detailIcon: { width: 64, height: 64, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  detailIcon: { marginBottom: 14 },
   detailName: { fontFamily: 'Inter_700Bold', fontSize: 24, letterSpacing: -0.5, textAlign: 'center' },
   detailCategory: { fontFamily: 'Inter_400Regular', fontSize: 13, marginTop: 5 },
   detailAmount: { fontFamily: 'Inter_700Bold', fontSize: 34, marginTop: 20, letterSpacing: -0.7 },
