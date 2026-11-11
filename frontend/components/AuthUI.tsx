@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, TextInputProps, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
@@ -38,18 +38,36 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
   );
 }
 
-export function AuthField({ label, ...props }: { label: string } & TextInputProps) {
+export function AuthField({ label, secureTextEntry, ...props }: { label: string } & TextInputProps) {
   const colors = useColors();
+  // Password fields get an eye button to show or hide what was typed.
+  const [visible, setVisible] = useState(false);
+  const isPassword = !!secureTextEntry;
   return (
     <View style={{ gap: 6 }}>
       <Text style={[styles.label, { color: colors.foreground }]}>{label}</Text>
-      <TextInput
-        placeholderTextColor={colors.mutedForeground}
-        accessibilityLabel={label}
-        autoCapitalize="none"
-        style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-        {...props}
-      />
+      <View style={[styles.inputWrap, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <TextInput
+          placeholderTextColor={colors.mutedForeground}
+          accessibilityLabel={label}
+          autoCapitalize="none"
+          autoCorrect={isPassword ? false : undefined}
+          secureTextEntry={isPassword && !visible}
+          style={[styles.input, { color: colors.foreground }]}
+          {...props}
+        />
+        {isPassword ? (
+          <Pressable
+            onPress={() => setVisible((v) => !v)}
+            accessibilityRole="button"
+            accessibilityLabel={visible ? 'Hide password' : 'Show password'}
+            hitSlop={8}
+            style={styles.eye}
+          >
+            <Feather name={visible ? 'eye-off' : 'eye'} size={19} color={colors.mutedForeground} />
+          </Pressable>
+        ) : null}
+      </View>
     </View>
   );
 }
@@ -73,7 +91,9 @@ const styles = StyleSheet.create({
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 20, marginBottom: 14 },
   form: { gap: 14 },
   label: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
-  input: { minHeight: 52, borderRadius: 16, borderWidth: 1, paddingHorizontal: 15, fontFamily: 'Inter_400Regular', fontSize: 15 },
+  inputWrap: { minHeight: 52, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center' },
+  input: { flex: 1, minWidth: 0, minHeight: 50, paddingHorizontal: 15, fontFamily: 'Inter_400Regular', fontSize: 15 },
+  eye: { width: 46, height: 50, alignItems: 'center', justifyContent: 'center' },
   errorBox: { borderRadius: 14, padding: 12, flexDirection: 'row', alignItems: 'center', gap: 8 },
   errorText: { fontFamily: 'Inter_500Medium', fontSize: 12, flex: 1 },
 });
