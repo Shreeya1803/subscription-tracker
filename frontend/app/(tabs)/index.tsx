@@ -6,7 +6,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppTour, TourStep, tourDoneKey } from '@/components/AppTour';
-import { IconButton, ServiceLogo, categoryColor, categoryLabels } from '@/components/SubscriptionUI';
+import { AppMark, IconButton, ServiceLogo, categoryColor, categoryLabels } from '@/components/SubscriptionUI';
 import { useAuth } from '@/context/AuthContext';
 import { Category, formatMoney, getDaysUntil, Subscription, useSubscriptions } from '@/context/SubscriptionContext';
 import { useAddSubscription } from '@/hooks/useAddSubscription';
@@ -168,7 +168,8 @@ export default function OverviewScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <View style={{ flex: 1 }}>
+          <AppMark size={42} dock />
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Text style={[styles.eyebrow, { color: colors.mutedForeground }]} numberOfLines={1}>
               {greeting()}
               {user?.displayName ? `, ${user.displayName.trim().split(' ')[0].toUpperCase()}` : ''}

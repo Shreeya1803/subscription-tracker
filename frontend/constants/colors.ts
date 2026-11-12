@@ -54,7 +54,7 @@ const colors = {
   radius: 18,
   /** Fixed brand colours from the app icon (same in light and dark mode). */
   brand: {
-    ink: '#010E33',
+    ink: '#04153B',
     inkRaised: '#0B1C47',
     inkLine: 'rgba(185, 197, 224, 0.16)',
     gold: '#F7B733',

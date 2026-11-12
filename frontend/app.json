@@ -13,7 +13,11 @@
     },
     "android": {
       "package": "com.kolhsys.subscriptiontracker",
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#04153B"
+      }
     },
     "web": {
       "favicon": "./assets/images/icon.png"
@@ -26,10 +30,10 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 120,
           "resizeMode": "contain",
-          "backgroundColor": "#010E33",
+          "backgroundColor": "#04153B",
           "dark": {
             "image": "./assets/images/splash-icon.png",
-            "backgroundColor": "#010E33"
+            "backgroundColor": "#04153B"
           }
         }
       ],

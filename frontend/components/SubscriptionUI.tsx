@@ -1,9 +1,10 @@
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Image as RNImage,
   Pressable,
   StyleSheet,
   Text,
@@ -12,6 +13,7 @@ import {
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { serviceLogoUrl, tileColor } from '@/lib/serviceLogos';
+import { isDockOpen, reportDock } from '@/lib/splashDock';
 import {
   Category,
   formatMoney,
@@ -85,12 +87,23 @@ export function ServiceLogo({ name, size = 42 }: { name: string; size?: number }
   );
 }
 
-export function AppMark({ size = 42 }: { size?: number }) {
-  const colors = useColors();
+/** The Subscript logo (navy tile with the calendar and arrows). `dock` marks the first screen's logo for the launch animation. */
+export function AppMark({ size = 42, dock = false }: { size?: number; dock?: boolean }) {
+  const ref = useRef<View>(null);
   return (
-    <View style={[styles.mark, { width: size, height: size, borderRadius: size / 3, backgroundColor: colors.primary }]}>
-      <View style={[styles.markRing, { width: size * 0.56, height: size * 0.56, borderRadius: size, borderColor: colors.tint }]} />
-      <Feather name="check" size={size * 0.36} color={colors.success} strokeWidth={3} />
+    <View
+      ref={ref}
+      collapsable={false}
+      onLayout={
+        dock && isDockOpen()
+          ? () => ref.current?.measureInWindow((x, y, width, height) => reportDock({ x, y, width, height }))
+          : undefined
+      }
+      style={{ width: size, height: size, borderRadius: size * 0.28, overflow: 'hidden' }}
+      accessibilityRole="image"
+      accessibilityLabel="Subscript"
+    >
+      <RNImage source={require('@/assets/images/logo-mark.png')} style={{ width: size, height: size }} />
     </View>
   );
 }
@@ -332,8 +345,6 @@ export function LoadingState() {
 const styles = StyleSheet.create({
   logoWrap: { backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   logoLetter: { color: '#FFFFFF', fontFamily: 'Inter_700Bold' },
-  mark: { alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 0 },
-  markRing: { position: 'absolute', borderWidth: 3 },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
   pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
   sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },

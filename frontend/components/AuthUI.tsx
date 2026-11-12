@@ -30,7 +30,7 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
           </Pressable>
         ) : null}
       </View>
-      <AppMark size={48} />
+      <AppMark size={48} dock />
       <Text style={[styles.title, { color: colors.foreground }]}>{title}</Text>
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text>
       <View style={styles.form}>{children}</View>

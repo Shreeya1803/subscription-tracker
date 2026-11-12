@@ -1,4 +1,8 @@
-import React, { useEffect, useRef } from 'react';import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import React, { useEffect, useRef } from 'react';
+import { Animated, View } from 'react-native';
+import { useColors } from '@/hooks/useColors';
+import { appShift } from '@/lib/splashDock';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
@@ -20,6 +24,7 @@ SplashScreen.preventAutoHideAsync();
 
 function RootLayoutNav() {
        const { status } = useAuth();
+     const colors = useColors();
      const lastNotification = useLastReminderTap();
      const openedNotification = useRef<string | null>(null);
 
@@ -41,6 +46,9 @@ function RootLayoutNav() {
   return (
     <>
     {status === 'loading' ? null : (
+    // The launch splash slides the first screen up into place (see BrandSplash).
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <Animated.View style={{ flex: 1, transform: [{ translateY: appShift }] }}>
     <Stack screenOptions={{ headerBackTitle: 'Back' }}>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -70,6 +78,8 @@ function RootLayoutNav() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack.Protected>
     </Stack>
+    </Animated.View>
+    </View>
     )}
     {/* Branded splash on top until the first screen is ready (then it fades out and removes itself). */}
     <BrandSplash ready={status !== 'loading'} />
