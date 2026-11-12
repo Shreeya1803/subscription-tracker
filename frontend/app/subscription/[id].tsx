@@ -6,7 +6,7 @@ import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { formatMoney, formatRenewal, getDaysUntil, useSubscriptions } from '@/context/SubscriptionContext';
-import { categoryLabels, PrimaryButton, ServiceLogo } from '@/components/SubscriptionUI';
+import { categoryLabels, IconButton, PrimaryButton, ServiceLogo } from '@/components/SubscriptionUI';
 
 export default function SubscriptionDetailScreen() {
   const colors = useColors();
@@ -77,13 +77,9 @@ export default function SubscriptionDetailScreen() {
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={{ paddingTop: insets.top + 10, paddingBottom: 50 }} showsVerticalScrollIndicator={false}>
       <View style={styles.topBar}>
-        <Pressable onPress={() => router.back()} accessibilityLabel="Go back" style={styles.backButton}>
-          <Feather name="arrow-left" size={21} color={colors.foreground} />
-        </Pressable>
+        <IconButton icon="arrow-left" label="Back" onPress={() => router.back()} />
         <Text style={[styles.topBarTitle, { color: colors.foreground }]}>Service details</Text>
-        <Pressable onPress={() => router.push(`/add?id=${subscription.id}`)} accessibilityLabel="Edit service" style={styles.backButton}>
-          <Feather name="edit-2" size={18} color={colors.foreground} />
-        </Pressable>
+        <IconButton icon="edit-2" label="Edit subscription" onPress={() => router.push(`/add?id=${subscription.id}`)} />
       </View>
 
       <View style={[styles.detailHero, { backgroundColor: colors.card, borderColor: colors.border }]}>

@@ -385,3 +385,54 @@ export const dashboardApi = {
     };
   },
 };
+
+// ---------- notification history (reminders already sent) ----------
+export type AppNotification = {
+  id: string;
+  subscriptionId: string | null;
+  title: string;
+  body: string;
+  sentAt: string;
+  readAt: string | null;
+};
+
+export const notificationsApi = {
+  /** Newest first, last 90 days (the server removes older ones). */
+  list: async (): Promise<AppNotification[]> => {
+    const { data, error, status } = await supabase
+      .from('notifications')
+      .select('id, subscription_id, title, body, sent_at, read_at')
+      .order('sent_at', { ascending: false })
+      .limit(100);
+    if (error) throw toApiError(error, status);
+    return (data ?? []).map((r: any) => ({
+      id: r.id,
+      subscriptionId: r.subscription_id,
+      title: r.title,
+      body: r.body,
+      sentAt: r.sent_at,
+      readAt: r.read_at,
+    }));
+  },
+
+  unreadCount: async (): Promise<number> => {
+    const { count, error, status } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .is('read_at', null);
+    if (error) throw toApiError(error, status);
+    return count ?? 0;
+  },
+
+  markAllRead: async () => {
+    const { error, status } = await supabase.from('notifications').update({ read_at: new Date().toISOString() }).is('read_at', null);
+    if (error) throw toApiError(error, status);
+  },
+
+  clearAll: async () => {
+    const id = await currentUserId();
+    const { error, status } = await supabase.from('notifications').delete().eq('user_id', id);
+    if (error) throw toApiError(error, status);
+  },
+};
+

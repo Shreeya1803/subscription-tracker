@@ -1,10 +1,12 @@
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Image } from 'expo-image';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Image as RNImage,
+  Modal,
+  useWindowDimensions,
   Pressable,
   StyleSheet,
   Text,
@@ -108,39 +110,95 @@ export function AppMark({ size = 42, dock = false }: { size?: number; dock?: boo
   );
 }
 
+/**
+ * Round icon-only button. Long-press shows a small label (e.g. "Add subscription") so the icon's
+ * purpose is always discoverable without cluttering the screen with text. Tap does the action.
+ */
 export function IconButton({
   icon,
   onPress,
   label,
   tone = 'muted',
+  badge = 0,
 }: {
   icon: keyof typeof Feather.glyphMap;
   onPress: () => void;
   label: string;
   tone?: 'muted' | 'primary';
+  /** Small count shown on the button (e.g. unread notifications). */
+  badge?: number;
 }) {
   const colors = useColors();
+  const ref = useRef<View>(null);
+  const [tip, setTip] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const showTip = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    ref.current?.measureInWindow((x, y, w, h) => setTip({ x, y, w, h }));
+  };
+  useEffect(() => {
+    if (!tip) return;
+    const t = setTimeout(() => setTip(null), 1800);
+    return () => clearTimeout(t);
+  }, [tip]);
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      testID={`icon-button-${label.toLowerCase().replace(/\s/g, '-')}`}
-      onPress={() => {
-        void Haptics.selectionAsync();
-        onPress();
-      }}
-      style={({ pressed }) => [
-        styles.iconButton,
-        { backgroundColor: tone === 'primary' ? colors.primary : colors.card },
-        pressed && styles.pressed,
-      ]}
-    >
-      <Feather
-        name={icon}
-        size={19}
-        color={tone === 'primary' ? colors.primaryForeground : colors.foreground}
-      />
-    </Pressable>
+    <View ref={ref} collapsable={false}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={badge ? `${label}, ${badge} new` : label}
+        accessibilityHint="Long-press to see what this button does"
+        testID={`icon-button-${label.toLowerCase().replace(/\s/g, '-')}`}
+        onPress={() => {
+          void Haptics.selectionAsync();
+          onPress();
+        }}
+        onLongPress={showTip}
+        delayLongPress={350}
+        style={({ pressed }) => [
+          styles.iconButton,
+          { backgroundColor: tone === 'primary' ? colors.primary : colors.card },
+          pressed && styles.pressed,
+        ]}
+      >
+        <Feather name={icon} size={19} color={tone === 'primary' ? colors.primaryForeground : colors.foreground} />
+      </Pressable>
+      {badge > 0 ? (
+        <View pointerEvents="none" style={[styles.badge, { backgroundColor: colors.brand.gold, borderColor: colors.background }]}>
+          <Text style={[styles.badgeText, { color: colors.brand.ink }]}>{badge > 9 ? '9+' : badge}</Text>
+        </View>
+      ) : null}
+      <TooltipBubble anchor={tip} text={label} onClose={() => setTip(null)} />
+    </View>
+  );
+}
+
+/** A small dark label shown next to a button; tap anywhere to dismiss. */
+export function TooltipBubble({
+  anchor,
+  text,
+  onClose,
+}: {
+  anchor: { x: number; y: number; w: number; h: number } | null;
+  text: string;
+  onClose: () => void;
+}) {
+  const { width: W, height: H } = useWindowDimensions();
+  if (!anchor) return null;
+  const below = anchor.y + anchor.h + 60 < H;
+  const maxW = Math.min(240, W - 24);
+  const center = anchor.x + anchor.w / 2;
+  const left = Math.max(12, Math.min(W - 12 - maxW, center - maxW / 2));
+  return (
+    <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={onClose}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close tip" />
+      <View
+        pointerEvents="none"
+        style={[styles.tipRow, { left, width: maxW }, below ? { top: anchor.y + anchor.h + 8 } : { bottom: H - anchor.y + 8 }]}
+      >
+        <View style={styles.tip} accessibilityLiveRegion="polite">
+          <Text style={styles.tipText}>{text}</Text>
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -346,6 +404,11 @@ const styles = StyleSheet.create({
   logoWrap: { backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   logoLetter: { color: '#FFFFFF', fontFamily: 'Inter_700Bold' },
   iconButton: { width: 42, height: 42, borderRadius: 21, alignItems: 'center', justifyContent: 'center' },
+  badge: { position: 'absolute', top: -3, right: -3, minWidth: 19, height: 19, borderRadius: 10, borderWidth: 2, paddingHorizontal: 4, alignItems: 'center', justifyContent: 'center' },
+  badgeText: { fontFamily: 'Inter_700Bold', fontSize: 10 },
+  tipRow: { position: 'absolute', alignItems: 'center' },
+  tip: { backgroundColor: 'rgba(12, 20, 40, 0.94)', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 7 },
+  tipText: { color: '#FFFFFF', fontFamily: 'Inter_600SemiBold', fontSize: 13 },
   pressed: { opacity: 0.72, transform: [{ scale: 0.98 }] },
   sectionHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   sectionTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 18 },

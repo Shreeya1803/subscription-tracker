@@ -2,16 +2,19 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router, useFocusEffect } from 'expo-router';
-import React, { useCallback, useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AppTour, TourStep, tourDoneKey } from '@/components/AppTour';
+import { NotificationsPanel } from '@/components/NotificationsPanel';
 import { AppMark, IconButton, ServiceLogo, categoryColor, categoryLabels } from '@/components/SubscriptionUI';
 import { useAuth } from '@/context/AuthContext';
 import { Category, formatMoney, getDaysUntil, Subscription, useSubscriptions } from '@/context/SubscriptionContext';
 import { useAddSubscription } from '@/hooks/useAddSubscription';
 import { useColors } from '@/hooks/useColors';
 import { FREE_ACTIVE_LIMIT } from '@/lib/plan';
+import { notificationsApi } from '@/lib/api';
+import { onReminderReceived } from '@/lib/notifications';
 
 type Colors = ReturnType<typeof useColors>;
 
@@ -60,6 +63,22 @@ export default function OverviewScreen() {
   const compact = height < 800;
   const upcomingRows = compact ? 2 : 3;
   const categoryRows = 2; // the two biggest categories, as in the design
+
+  // ----- notification history (bell) -----
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
+  const refreshUnread = useCallback(() => {
+    notificationsApi.unreadCount().then(setUnread).catch(() => {});
+  }, []);
+  useFocusEffect(refreshUnread);
+  useEffect(() => {
+    const app = AppState.addEventListener('change', (state) => state === 'active' && refreshUnread());
+    const off = onReminderReceived(refreshUnread);
+    return () => {
+      app.remove();
+      off();
+    };
+  }, [refreshUnread]);
 
   // ----- guided tour (first visit, or replayed from Settings) -----
   const scrollRef = useRef<ScrollView>(null);
@@ -129,8 +148,8 @@ export default function OverviewScreen() {
     {
       key: 'bell',
       target: bellRef,
-      title: 'Renewal reminders',
-      body: 'Get a notification before a payment is taken, so you can keep the service or cancel in time. You choose how many days ahead for each subscription.',
+      title: 'Notifications',
+      body: 'Get a reminder before a payment is taken, so you can keep the service or cancel in time. Tap the bell to see your past reminders. Reminder settings are in Settings.',
     },
     {
       key: 'tabs',
@@ -177,7 +196,7 @@ export default function OverviewScreen() {
             <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={1}>Your subscriptions</Text>
           </View>
           <View ref={bellRef} collapsable={false}>
-            <IconButton icon="bell" label="Reminders" onPress={() => router.push('/(tabs)/settings')} />
+            <IconButton icon="bell" label="Notifications" badge={unread} onPress={() => setPanelOpen(true)} />
           </View>
         </View>
 
@@ -271,6 +290,8 @@ export default function OverviewScreen() {
           </Pressable>
         </View>
       </ScrollView>
+
+      <NotificationsPanel visible={panelOpen} onClose={() => setPanelOpen(false)} onChanged={refreshUnread} />
 
       <AppTour
         visible={touring}

@@ -99,3 +99,11 @@ export async function openNotificationSettings() {
   }
   await Linking.openSettings();
 }
+
+/** Runs `cb` when a reminder arrives while the app is open (so the bell can update). Returns an unsubscribe. */
+export function onReminderReceived(cb: () => void): () => void {
+  if (!Notifications) return () => {};
+  const sub = Notifications.addNotificationReceivedListener(() => cb());
+  return () => sub.remove();
+}
+
