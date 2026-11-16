@@ -45,11 +45,11 @@ export function BrandSplash({ ready }: { ready: boolean }) {
         return;
       }
 
-      // Land on the emblem inside the logo tile (the tile has ~15% padding around it).
-      const inner = dock.width * 0.7;
+      // Land on the emblem inside the logo tile (it fills ~54% of the tile, a little above centre).
+      const inner = dock.width * 0.54;
       const k = inner / EMBLEM;
       const dx = dock.x + dock.width / 2 - W / 2;
-      const dy = dock.y + dock.height / 2 - H / 2;
+      const dy = dock.y + dock.height * 0.477 - H / 2;
       appShift.setValue(H * 0.22); // hidden behind the navy, so this jump is not seen
       const curve = Easing.bezier(0.65, 0, 0.35, 1);
       Animated.parallel([
@@ -95,5 +95,5 @@ export function BrandSplash({ ready }: { ready: boolean }) {
 const styles = StyleSheet.create({
   emblem: { position: 'absolute', width: EMBLEM, height: EMBLEM },
   wordWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  word: { width: 150, height: 28 },
+  word: { width: 150, height: 33 },
 });

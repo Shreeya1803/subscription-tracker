@@ -101,7 +101,7 @@ export function AppMark({ size = 42, dock = false }: { size?: number; dock?: boo
           ? () => ref.current?.measureInWindow((x, y, width, height) => reportDock({ x, y, width, height }))
           : undefined
       }
-      style={{ width: size, height: size, borderRadius: size * 0.28, overflow: 'hidden' }}
+      style={{ width: size, height: size, borderRadius: size * 0.22, overflow: 'hidden' }}
       accessibilityRole="image"
       accessibilityLabel="Subscript"
     >
