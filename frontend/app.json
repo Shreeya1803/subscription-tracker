@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.kolhsys.subscriptiontracker"
+      "bundleIdentifier": "com.kolhsys.subscriptiontracker",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.kolhsys.subscriptiontracker",
