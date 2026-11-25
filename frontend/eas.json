@@ -14,16 +14,17 @@
       "autoIncrement": true,
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://lrdekdusycwrpwghfytx.supabase.co",
-"EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_cAVfpl1iMwA4nX7JY9xSOg_Dl08jbOl",
-        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_VGwqXTXuUUipcDhDoMREYmbueKR"
+        "EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_cAVfpl1iMwA4nX7JY9xSOg_Dl08jbOl",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_VGwqXTXuUUipcDhDoMREYmbueKR",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_iCUfjJawJSotXvrLHiRCGatjhTr"
       }
     }
   },
-"submit": {
-  "production": {
-    "ios": {
-      "ascAppId": "6839097543"
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "6839097543"
+      }
     }
   }
-}
 }
