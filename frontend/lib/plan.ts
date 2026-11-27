@@ -19,7 +19,7 @@ export const PLANS: { id: PlanId; title: string; blurb: string }[] = [
  * links on any screen that sells a subscription. Empty strings hide the links.
  */
 export const LEGAL = {
-  termsUrl: 'https://www.kolhsys.com/support', 
+  termsUrl: 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/', 
   privacyUrl: 'https://www.kolhsys.com/privacy-policy',
 };
 
